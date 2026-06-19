@@ -1,0 +1,28 @@
+# Nix
+result
+result-*
+.direnv/
+
+# Go
+/tools/**/bin/
+*.test
+*.out
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Generated registry contract (build output)
+/registry/docs/
+
+# Local provider cache / extraction scratch
+.cache/
+/extract-out/
+
+# Claude Code local settings (machine-local, not shared)
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+*.swp
