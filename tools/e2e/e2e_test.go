@@ -137,17 +137,19 @@ func writeMetadata(t *testing.T, dir, address, ns, name, version string, protoco
 }
 
 // TestRealProviderPipeline is the real-provider e2e: resolve, extract, contract,
-// and render `hashicorp/random` and `hashicorp/null` (credential-free; tls is a
-// third in the proof script). It needs network; it skips when offline or when
-// nivis is unavailable. Telmate/proxmox is intentionally excluded here — nivis
-// gen v0.4.0 cannot configure it (see the run report / memory).
+// and render the proof providers. It needs network; it skips when offline or when
+// nivis is unavailable. With nivis >= 0.4.2 the credential-requiring providers
+// (Telmate/proxmox, azurerm, google) extract too — nivis gen fetches the schema
+// without calling ConfigureProvider (bean nixform2-jcpm).
 func TestRealProviderPipeline(t *testing.T) {
 	if os.Getenv("NIVIS_REGISTRY_NET_E2E") != "1" {
 		t.Skip("set NIVIS_REGISTRY_NET_E2E=1 to run the network real-provider e2e")
 	}
 	nivis := nivisBin(t)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	// proxmox/azurerm/google are large and need the nivis>=0.4.2 schema-only
+	// path; the timeout covers downloading + generating them.
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancel()
 
 	extractRoot := t.TempDir()
@@ -158,6 +160,9 @@ func TestRealProviderPipeline(t *testing.T) {
 		{"hashicorp", "random"},
 		{"hashicorp", "null"},
 		{"hashicorp", "tls"},
+		{"Telmate", "proxmox"}, // formerly blocked by configure-before-schema
+		{"hashicorp", "azurerm"},
+		{"hashicorp", "google"},
 	} {
 		res, err := c.Extract(ctx, prov.ns, prov.name, extractRoot)
 		if err != nil {

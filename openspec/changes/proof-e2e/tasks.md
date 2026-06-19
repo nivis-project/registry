@@ -8,12 +8,12 @@
 
 ## 2. Real-provider e2e
 
-- [x] 2.1 Run `hashicorp/random`, `hashicorp/null`, and `hashicorp/tls` through the full pipeline
-  (`tools/e2e` `TestRealProviderPipeline`, gated by `NIVIS_REGISTRY_NET_E2E=1`). NOTE: `Telmate/proxmox`
-  is excluded — nivis gen v0.4.0 configures before fetching schema and proxmox/azurerm/google reject an
-  all-null configure (fix in flight upstream; re-pin the nivis input after its patch release).
-- [x] 2.2 Assert contract `index.json` + per-item docs + compat badge for each (proven; the proof
-  script `scripts/proof.sh` emits the contract for all three)
+- [x] 2.1 Run `hashicorp/random`, `hashicorp/null`, `hashicorp/tls`, `Telmate/proxmox`,
+  `hashicorp/azurerm`, and `hashicorp/google` through the full pipeline (`tools/e2e`
+  `TestRealProviderPipeline`, gated by `NIVIS_REGISTRY_NET_E2E=1`). The credential-requiring three
+  are unblocked by nivis 0.4.2 (schema fetch no longer configures); the `nivis` input is pinned to it.
+- [x] 2.2 Assert contract `index.json` + per-item docs + compat badge for each (proven; `scripts/proof.sh`
+  emits the contract for all six — 2441 contract files including azurerm/google).
 - [x] 2.3 Assert rendered resource pages show Nix constructors (no HCL block)
 
 ## 3. PAUSE gate

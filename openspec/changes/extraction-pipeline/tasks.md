@@ -19,13 +19,11 @@
 
 ## 4. Proof set
 
-- [x] 4.1 Run the full pipeline on `hashicorp/random`, `hashicorp/null`, and a third credential-free
-  real provider (`hashicorp/tls`). NOTE: `Telmate/proxmox` (and `azurerm`/`google`) cannot be
-  schema-extracted by `nivis gen` v0.4.0 — it calls `ConfigureProvider` with an all-null config
-  before fetching the schema, and credential-requiring providers ERROR there. The pipeline handles
-  this resiliently (skip+log). A fix is in flight upstream in the nivis repo; once a nivis patch
-  release lands, re-pinning the `nivis` flake input makes proxmox/azure extract with no code change.
-  See memory `nivis-gen-configure-limitation`.
+- [x] 4.1 Run the full pipeline on `hashicorp/random`, `hashicorp/null`, `hashicorp/tls`, AND the
+  credential-requiring providers `Telmate/proxmox`, `hashicorp/azurerm`, `hashicorp/google`. The
+  latter three were blocked by `nivis gen` <= 0.4.1 (it called `ConfigureProvider` before fetching
+  the schema, and credential-requiring providers ERROR there). FIXED upstream in **nivis 0.4.2**
+  (`nivis gen` now uses a schema-only client that skips Configure — bean `nixform2-jcpm`); the
+  `nivis` flake input is pinned to v0.4.2, so all six extract with no credentials.
 - [x] 4.2 Confirm extraction output (`.nix` constructors + `metadata.json`) + compat records for all
-  three green providers; record proxmox/azure as a documented, soon-fixed gap (compat axis 1
-  `schema_extractable:false`).
+  six providers (proxmox=7, azurerm=1130, google=1277 constructors).
