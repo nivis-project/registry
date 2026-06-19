@@ -139,9 +139,19 @@ func GenerateProvider(extractDir, contractRoot string) (string, error) {
 	return indexPath, nil
 }
 
+// CatalogEntry is one provider version in the browsable catalog (catalog.json),
+// which lets the SPA list providers without a live search backend (v1).
+type CatalogEntry struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+	Version   string `json:"version"`
+	Tier      string `json:"tier"`
+}
+
 // GenerateAll walks every provider-version directory under extractRoot
-// (extractRoot/<ns>/<name>/<version>/) and generates each. It is resilient: a
-// provider that fails generation is logged via log (if non-nil) and skipped.
+// (extractRoot/<ns>/<name>/<version>/), generates each, and writes the browsable
+// catalog.json. It is resilient: a provider that fails generation is logged via
+// log (if non-nil) and skipped.
 func GenerateAll(extractRoot, contractRoot string, log func(string, ...interface{})) ([]string, error) {
 	if log == nil {
 		log = func(string, ...interface{}) {}
@@ -151,6 +161,7 @@ func GenerateAll(extractRoot, contractRoot string, log func(string, ...interface
 		return nil, err
 	}
 	var out []string
+	var catalog []CatalogEntry
 	for _, vd := range versionDirs {
 		idx, gerr := GenerateProvider(vd, contractRoot)
 		if gerr != nil {
@@ -159,8 +170,39 @@ func GenerateAll(extractRoot, contractRoot string, log func(string, ...interface
 		}
 		log("ok   %s -> %s", vd, idx)
 		out = append(out, idx)
+		if meta, merr := readMetadata(vd); merr == nil {
+			rec := compat.Compute(meta, true)
+			catalog = append(catalog, CatalogEntry{
+				Namespace: meta.Namespace, Name: meta.Name, Version: meta.Version, Tier: string(rec.Tier),
+			})
+		}
+	}
+	if err := writeCatalog(contractRoot, catalog); err != nil {
+		return out, err
 	}
 	return out, nil
+}
+
+// writeCatalog writes the browsable provider list to registry/catalog.json.
+func writeCatalog(contractRoot string, catalog []CatalogEntry) error {
+	sort.Slice(catalog, func(i, j int) bool {
+		if catalog[i].Namespace != catalog[j].Namespace {
+			return catalog[i].Namespace < catalog[j].Namespace
+		}
+		return catalog[i].Name < catalog[j].Name
+	})
+	if catalog == nil {
+		catalog = []CatalogEntry{}
+	}
+	dir := filepath.Join(contractRoot, "registry")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	b, err := json.MarshalIndent(catalog, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(dir, "catalog.json"), append(b, '\n'), 0o644)
 }
 
 // findVersionDirs returns every directory containing a metadata.json under root.

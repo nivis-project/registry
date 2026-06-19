@@ -1,0 +1,6 @@
+# esbuild (a vite/vitest transitive dep) needs its postinstall to fetch its
+# platform binary; approve only that build script.
+onlyBuiltDependencies:
+  - esbuild
+allowBuilds:
+  esbuild: true

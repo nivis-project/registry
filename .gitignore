@@ -12,9 +12,12 @@ result-*
 node_modules/
 frontend/dist/
 frontend/.vite/
+*.tsbuildinfo
 
-# Generated registry contract (build output)
+# Generated registry contract (build output) — emitted by tools/generate
 /registry/docs/
+/registry/catalog.json
+frontend/public/registry/
 
 # Local provider cache / extraction scratch
 .cache/
