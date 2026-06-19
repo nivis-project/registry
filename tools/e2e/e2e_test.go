@@ -187,5 +187,42 @@ func TestRealProviderPipeline(t *testing.T) {
 		if !strings.Contains(string(body), "```nix") {
 			t.Errorf("%s/%s: rendered page is not Nix", prov.ns, prov.name)
 		}
+
+		// The generated constructors are the actual product — every one must be
+		// valid Nix. Eval a sample plus any reserved-name-aliased file (the
+		// `cfg_` guard from nivis 0.4.3 / bean nixform2-56tm), so a regression to
+		// the "duplicate formal argument" class fails here.
+		assertConstructorsEvaluate(ctx, t, prov.ns+"/"+prov.name, res.NixFiles)
+	}
+}
+
+// assertConstructorsEvaluate runs `nix eval` over a sample of generated .nix
+// constructors (always including any that carry a `cfg_` reserved-name alias)
+// to confirm they parse and evaluate. Skips if `nix` is unavailable.
+func assertConstructorsEvaluate(ctx context.Context, t *testing.T, addr string, nixFiles []string) {
+	t.Helper()
+	if _, err := exec.LookPath("nix"); err != nil {
+		t.Logf("%s: nix not on PATH; skipping constructor eval", addr)
+		return
+	}
+	// Build the sample: first/middle/last + every file with a reserved-name alias.
+	sample := map[string]bool{}
+	if n := len(nixFiles); n > 0 {
+		sample[nixFiles[0]] = true
+		sample[nixFiles[n/2]] = true
+		sample[nixFiles[n-1]] = true
+	}
+	for _, f := range nixFiles {
+		if b, err := os.ReadFile(f); err == nil && strings.Contains(string(b), "cfg_") {
+			sample[f] = true
+		}
+	}
+	for f := range sample {
+		// `import <file>` parses + evaluates the outer lambda; enough to catch a
+		// duplicate-formal / syntax regression without supplying real args.
+		cmd := exec.CommandContext(ctx, "nix", "eval", "--impure", "--expr", "builtins.isFunction (import "+f+")")
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Errorf("%s: generated constructor does not evaluate: %s\n%s", addr, filepath.Base(f), out)
+		}
 	}
 }
