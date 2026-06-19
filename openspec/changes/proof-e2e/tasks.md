@@ -20,5 +20,5 @@
 
 - [x] 3.1 Confirm e2e green and site builds locally (`nix flake check`, `go test ./...`, hermetic +
   real e2e, frontend `pnpm test`/`build`, and `scripts/proof.sh` all green)
-- [ ] 3.2 Commit as `Pim Snel <post@pimsnel.com>` (no Claude trailer); push to `main`
-- [ ] 3.3 STOP and report; do NOT scale to 50 or deploy; leave milestone `06` as `todo`
+- [x] 3.2 Commit as `Pim Snel <post@pimsnel.com>` (no Claude trailer); push to `main`
+- [x] 3.3 STOP and report; do NOT scale to 50 or deploy; leave milestone `06` as `todo`
