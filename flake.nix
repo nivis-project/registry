@@ -76,15 +76,9 @@
             version = "0.1.0";
             src = ./tools;
             vendorHash = null;
-            # No main package yet (seed/extract/compat/generate are libraries
-            # with CLIs added as the pipeline lands); build the library tree.
-            subPackages = [
-              "."
-              "seed"
-              "extract"
-              "compat"
-              "generate"
-            ];
+            # Build the whole module (libraries seed/extract/compat/generate +
+            # the cmd/* drivers). go test runs in the sandbox; the
+            # network-touching paths are gated behind env (NIVIS_SRC) and skip.
             doCheck = true;
           };
         }
@@ -104,13 +98,6 @@
             version = "0.1.0";
             src = ./tools;
             vendorHash = null;
-            subPackages = [
-              "."
-              "seed"
-              "extract"
-              "compat"
-              "generate"
-            ];
             doCheck = true;
           };
 
