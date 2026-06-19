@@ -40,6 +40,23 @@ var UtilityAllowlist = []string{
 	"hashicorp/cloudinit",
 }
 
+// EuropeanAllowlist is always included regardless of download rank: the most
+// popular providers for European-sovereign services. These rank below the global
+// top-50 by download count but matter to European users, so they are pinned. Each
+// has a real, extractable provider (verified on the OpenTofu registry).
+// (hetznercloud/hcloud and exoscale/exoscale are European too but already rank in
+// the popularity list, so they need no explicit pin.)
+var EuropeanAllowlist = []string{
+	"scaleway/scaleway",        // Scaleway (FR)
+	"ovh/ovh",                  // OVHcloud (FR)
+	"UpCloudLtd/upcloud",       // UpCloud (FI)
+	"ionos-cloud/ionoscloud",   // IONOS (DE)
+	"stackitcloud/stackit",     // STACKIT / Schwarz Group (DE)
+	"cloudscale-ch/cloudscale", // cloudscale.ch (CH)
+	"aiven/aiven",              // Aiven managed data (FI)
+	"go-gandi/gandi",           // Gandi domains/DNS (FR)
+}
+
 // MustInclude are explicit anchors the seed must always contain.
 var MustInclude = []string{
 	"hashicorp/aws",
@@ -48,8 +65,9 @@ var MustInclude = []string{
 	"Telmate/proxmox", // most-popular proxmox provider (~16M downloads)
 }
 
-// MaxSeed caps the first registry at 50 providers.
-const MaxSeed = 50
+// MaxSeed caps the seed list. Raised from 50 to fit the European allowlist
+// without evicting popular global providers.
+const MaxSeed = 58
 
 // DefaultListURL is the public popularity API. The filter= param is inert; page
 // with limit/offset and sort client-side.
@@ -160,10 +178,11 @@ func Fetch(ctx context.Context, client *http.Client, listURL string, want int) (
 }
 
 // Select turns the raw popularity rows into the pinned seed: the explicit
-// anchors and utility allowlist are always present (even if absent from the
-// fetched rows), then the most-popular remaining providers fill up to MaxSeed.
-// Output is deterministic: anchors first (in declared order), then utilities (in
-// declared order), then popular providers by (tier, -downloads, address).
+// anchors, utility allowlist, and European allowlist are always present (even if
+// absent from the fetched rows), then the most-popular remaining providers fill
+// up to MaxSeed. Output is deterministic: anchors first (in declared order), then
+// utilities, then European providers, then popular providers by
+// (tier, -downloads, address).
 func Select(rows []Provider) []SeedEntry {
 	byAddr := map[string]Provider{}
 	for _, p := range rows {
@@ -198,8 +217,12 @@ func Select(rows []Provider) []SeedEntry {
 	for _, a := range UtilityAllowlist {
 		add(a, "utility")
 	}
+	// 3. European-service allowlist, in declared order.
+	for _, a := range EuropeanAllowlist {
+		add(a, "europe")
+	}
 
-	// 3. Most-popular remaining, sorted deterministically.
+	// 4. Most-popular remaining, sorted deterministically.
 	popular := make([]Provider, 0, len(rows))
 	for _, p := range rows {
 		if !seen[p.Address()] {

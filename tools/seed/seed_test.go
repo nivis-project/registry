@@ -19,8 +19,30 @@ func TestAnchorsPresent(t *testing.T) {
 	if !foundProxmox {
 		t.Error("seed must always include Telmate/proxmox (the most-popular proxmox provider)")
 	}
-	if MaxSeed != 50 {
-		t.Errorf("MaxSeed = %d, want 50", MaxSeed)
+	if MaxSeed < 50 {
+		t.Errorf("MaxSeed = %d, want >= 50", MaxSeed)
+	}
+	if MaxSeed < len(MustInclude)+len(UtilityAllowlist)+len(EuropeanAllowlist) {
+		t.Errorf("MaxSeed = %d is too small to fit all pinned allowlists", MaxSeed)
+	}
+}
+
+// TestEuropeanAllowlistPinned: the European-service providers are always present
+// with the `europe` reason, even though they rank below the global top-50.
+func TestEuropeanAllowlistPinned(t *testing.T) {
+	if len(EuropeanAllowlist) == 0 {
+		t.Fatal("EuropeanAllowlist must not be empty")
+	}
+	got := addrSet(Select(fixtureRows()))
+	for _, want := range EuropeanAllowlist {
+		e, ok := got[want]
+		if !ok {
+			t.Errorf("seed missing European provider %q", want)
+			continue
+		}
+		if e.Reason != "europe" {
+			t.Errorf("%q reason = %q, want europe", want, e.Reason)
+		}
 	}
 }
 
