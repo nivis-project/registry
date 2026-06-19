@@ -1,10 +1,11 @@
 ---
 # registry-289j
 title: CI and hermetic test harness
-status: todo
+status: completed
 type: epic
+priority: normal
 created_at: 2026-06-19T11:14:40Z
-updated_at: 2026-06-19T11:14:40Z
+updated_at: 2026-06-19T11:42:21Z
 parent: registry-fjvf
 ---
 

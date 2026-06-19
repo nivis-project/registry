@@ -9,7 +9,11 @@
   };
 
   outputs =
-    { self, nixpkgs, nivis }:
+    {
+      self,
+      nixpkgs,
+      nivis,
+    }:
     let
       # Plain-nix system enumeration — NO flake-utils. Copied from the nivis flake.
       systems = [
@@ -18,13 +22,18 @@
         "x86_64-darwin"
         "aarch64-darwin"
       ];
-      forAllSystems = f: builtins.listToAttrs (map (system: { name = system; value = f system; }) systems);
+      forAllSystems =
+        f:
+        builtins.listToAttrs (
+          map (system: {
+            name = system;
+            value = f system;
+          }) systems
+        );
       pkgsFor = system: import nixpkgs { inherit system; };
 
       # The nivis CLI package for a given system (exposes `nivis gen`).
-      nivisCliFor =
-        system:
-        nivis.packages.${system}.nivis or nivis.packages.${system}.default;
+      nivisCliFor = system: nivis.packages.${system}.nivis or nivis.packages.${system}.default;
     in
     {
       # Dev shell: the full toolchain for building the registry.
@@ -53,30 +62,72 @@
         }
       );
 
-      # Backend-generator packages live here as they are implemented
-      # (tools/seed, tools/extract, tools/compat, tools/generate). Stubbed for now.
+      # The backend generator (tools/seed, tools/extract, tools/compat,
+      # tools/generate) builds as a single Go module. No external deps yet, so
+      # vendorHash = null; revisit when a dependency is added.
       packages = forAllSystems (
         system:
         let
           pkgs = pkgsFor system;
         in
         {
-          # default = pkgs.buildGoModule { ... };  # TODO: wire tools/generate
+          default = pkgs.buildGoModule {
+            pname = "nivis-registry-tools";
+            version = "0.1.0";
+            src = ./tools;
+            vendorHash = null;
+            # No main package yet (seed/extract/compat/generate are libraries
+            # with CLIs added as the pipeline lands); build the library tree.
+            subPackages = [
+              "."
+              "seed"
+              "extract"
+              "compat"
+              "generate"
+            ];
+            doCheck = true;
+          };
         }
       );
 
-      # Keep `nix flake check` meaningful from day one.
+      # `nix flake check` runs the Go test suite hermetically (no network) plus a
+      # gofmt gate, so the harness is green from day one and stays green.
       checks = forAllSystems (
         system:
         let
           pkgs = pkgsFor system;
         in
         {
-          # Placeholder check; replaced by `go test ./...` wrapper in foundations-scaffold.
-          devshell-evaluates = pkgs.runCommand "devshell-evaluates" { } "echo ok > $out";
+          # Compiles tools/ and runs `go test ./...` in the Nix sandbox.
+          go-tests = pkgs.buildGoModule {
+            pname = "nivis-registry-tools-tests";
+            version = "0.1.0";
+            src = ./tools;
+            vendorHash = null;
+            subPackages = [
+              "."
+              "seed"
+              "extract"
+              "compat"
+              "generate"
+            ];
+            doCheck = true;
+          };
+
+          # Fail the check if any tracked Go file is not gofmt-clean.
+          gofmt = pkgs.runCommand "gofmt-check" { nativeBuildInputs = [ pkgs.go ]; } ''
+            cd ${./tools}
+            unformatted=$(gofmt -l .)
+            if [ -n "$unformatted" ]; then
+              echo "gofmt found unformatted files:" >&2
+              echo "$unformatted" >&2
+              exit 1
+            fi
+            echo ok > $out
+          '';
         }
       );
 
-      formatter = forAllSystems (system: (pkgsFor system).nixfmt-rfc-style);
+      formatter = forAllSystems (system: (pkgsFor system).nixfmt);
     };
 }
