@@ -201,11 +201,14 @@ func (c *Client) resolve(ctx context.Context, namespace, name string) (downloadR
 }
 
 // latestVersionIndex returns the index of the highest version by numeric
-// (semver-ish) ordering — same approach as nivis.
+// (semver-ish) ordering. STABLE releases are preferred over prereleases: a
+// catalog wants the latest stable, not an `-rc`/`-beta` candidate. The highest
+// prerelease is only chosen when a provider has published no stable version.
 func latestVersionIndex(vr versionsResp) int {
 	type kv struct {
 		idx int
 		key [3]int
+		pre bool
 		raw string
 	}
 	out := make([]kv, 0, len(vr.Versions))
@@ -219,9 +222,13 @@ func latestVersionIndex(vr versionsResp) int {
 			}
 			key[j] = n
 		}
-		out = append(out, kv{idx: i, key: key, raw: v.Version})
+		out = append(out, kv{idx: i, key: key, pre: isPrerelease(v.Version), raw: v.Version})
 	}
 	sort.Slice(out, func(i, j int) bool {
+		// Stable sorts above prerelease, so the last element is the best choice.
+		if out[i].pre != out[j].pre {
+			return out[i].pre // a prerelease (true) sorts "less"
+		}
 		for k := 0; k < 3; k++ {
 			if out[i].key[k] != out[j].key[k] {
 				return out[i].key[k] < out[j].key[k]
@@ -230,6 +237,21 @@ func latestVersionIndex(vr versionsResp) int {
 		return out[i].raw < out[j].raw
 	})
 	return out[len(out)-1].idx
+}
+
+// isPrerelease reports whether a version string is a prerelease (an `-rc`,
+// `-beta`, `-alpha`, `-pre`, or any `-suffix` in semver terms).
+func isPrerelease(version string) bool {
+	if i := strings.IndexByte(version, '-'); i >= 0 {
+		return true
+	}
+	lower := strings.ToLower(version)
+	for _, m := range []string{"rc", "beta", "alpha", "pre"} {
+		if strings.Contains(lower, m) {
+			return true
+		}
+	}
+	return false
 }
 
 // --- verification (mirrors nivis verify-before-execute) ---
@@ -342,21 +364,26 @@ func (c *Client) RunGen(ctx context.Context, binaryPath, identity, outDir string
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("nivis gen: %w: %s", err, strings.TrimSpace(stderr.String()))
 	}
+	// gen succeeded. A provider with no managed resources (datasource-only, e.g.
+	// hashicorp/http, hashicorp/external) yields no .nix files — and nivis gen may
+	// not even create idDir. That is a VALID outcome (the provider is compatible;
+	// it just has nothing to construct), distinct from a gen failure (handled
+	// above). Return an empty slice, not an error.
 	idDir := filepath.Join(outDir, identity)
 	entries, err := os.ReadDir(idDir)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return []string{}, nil
+		}
 		return nil, fmt.Errorf("read gen output %s: %w", idDir, err)
 	}
-	var nixFiles []string
+	nixFiles := []string{}
 	for _, e := range entries {
 		if strings.HasSuffix(e.Name(), ".nix") {
 			nixFiles = append(nixFiles, filepath.Join(idDir, e.Name()))
 		}
 	}
 	sort.Strings(nixFiles)
-	if len(nixFiles) == 0 {
-		return nil, fmt.Errorf("nivis gen produced no .nix files in %s", idDir)
-	}
 	return nixFiles, nil
 }
 

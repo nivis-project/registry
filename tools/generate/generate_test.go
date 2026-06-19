@@ -256,6 +256,34 @@ nivis.mkResource ({ provider = "null"; type = "null_resource"; inherit name conf
 	}
 }
 
+// TestGenerateDatasourceOnlyProvider covers a provider with NO resource
+// constructors (e.g. hashicorp/http, hashicorp/external — datasource-only).
+// nivis gen emits no .nix; the provider is still schema-extractable and must
+// appear in the contract with an empty resource list.
+func TestGenerateDatasourceOnlyProvider(t *testing.T) {
+	extractRoot := t.TempDir()
+	contractRoot := t.TempDir()
+	// No constructors — just metadata, as a successful extract of a datasource-
+	// only provider produces.
+	vdir := writeFixtureProvider(t, extractRoot, "hashicorp", "http", "3.6.0",
+		[]string{"5.0"}, [][2]string{{"linux", "amd64"}}, map[string]string{})
+
+	idxPath, err := GenerateProvider(vdir, contractRoot)
+	if err != nil {
+		t.Fatalf("GenerateProvider: %v", err)
+	}
+	var pv ProviderVersion
+	readJSON(t, idxPath, &pv)
+	if len(pv.Docs.Resources) != 0 {
+		t.Errorf("expected 0 resources, got %d", len(pv.Docs.Resources))
+	}
+	// The schema WAS extracted (we have metadata) — must not be reported as
+	// not-extractable just because there are no resources.
+	if !pv.Compat.SchemaExtractable {
+		t.Error("a datasource-only provider is still schema_extractable")
+	}
+}
+
 func contains(ss []string, want string) bool {
 	for _, s := range ss {
 		if s == want {

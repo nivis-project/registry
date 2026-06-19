@@ -28,6 +28,7 @@ func main() {
 	outRoot := flag.String("out", "extract-out", "output root for generated constructors + metadata")
 	cacheDir := flag.String("cache", ".cache/providers", "cache dir for verified binaries")
 	seedPath := flag.String("seed", "", "read provider addresses from a seed.json instead of args")
+	reportPath := flag.String("report", "", "write a JSON coverage report to this path")
 	flag.Parse()
 
 	addrs := normalizeAddrs(flag.Args())
@@ -43,31 +44,64 @@ func main() {
 	}
 
 	c := extract.New(*nivisBin, *cacheDir)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
 	defer cancel()
 
 	results := c.Batch(ctx, addrs, *outRoot, log.Printf)
 
-	// Compute + persist a compat record per successful extraction, and summarize.
-	var ok, skipped int
+	// Compute + persist a compat record per successful extraction, build a
+	// coverage report, and summarize.
+	report := coverageReport{Total: len(results)}
 	for _, r := range results {
 		if r.Skipped() {
-			skipped++
+			report.Skipped++
+			report.Providers = append(report.Providers, coverageEntry{
+				Address: r.Address, Extracted: false, Reason: r.SkipReason,
+			})
 			continue
 		}
-		ok++
+		report.OK++
 		rec := compat.Compute(r.Metadata, true)
 		recPath := r.OutDir + "/compat.json"
 		if b, err := json.MarshalIndent(rec, "", "  "); err == nil {
 			_ = os.WriteFile(recPath, append(b, '\n'), 0o644)
 		}
+		report.Providers = append(report.Providers, coverageEntry{
+			Address: r.Address, Extracted: true, Version: r.Metadata.Version, Constructors: len(r.NixFiles),
+		})
 		log.Printf("compat %s: tier=%q protocols=%v arches=%v e2e=%s",
 			r.Address, rec.Tier, rec.Protocols, rec.Architectures, rec.E2E)
 	}
-	log.Printf("extract: %d ok, %d skipped, %d total", ok, skipped, len(results))
-	if ok == 0 {
+	log.Printf("extract: %d ok, %d skipped, %d total", report.OK, report.Skipped, report.Total)
+
+	if *reportPath != "" {
+		if b, err := json.MarshalIndent(report, "", "  "); err == nil {
+			if werr := os.WriteFile(*reportPath, append(b, '\n'), 0o644); werr != nil {
+				log.Printf("extract: could not write report %s: %v", *reportPath, werr)
+			} else {
+				log.Printf("extract: coverage report -> %s", *reportPath)
+			}
+		}
+	}
+	if report.OK == 0 {
 		os.Exit(1)
 	}
+}
+
+// coverageReport is the auditable outcome of a (possibly full-catalog) run.
+type coverageReport struct {
+	Total     int             `json:"total"`
+	OK        int             `json:"ok"`
+	Skipped   int             `json:"skipped"`
+	Providers []coverageEntry `json:"providers"`
+}
+
+type coverageEntry struct {
+	Address      string `json:"address"`
+	Extracted    bool   `json:"extracted"`
+	Version      string `json:"version,omitempty"`
+	Constructors int    `json:"constructors,omitempty"`
+	Reason       string `json:"reason,omitempty"`
 }
 
 // normalizeAddrs expands a bare "<name>" to "hashicorp/<name>".

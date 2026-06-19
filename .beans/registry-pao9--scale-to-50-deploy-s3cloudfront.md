@@ -1,11 +1,11 @@
 ---
 # registry-pao9
 title: Scale to 50 + deploy S3/CloudFront
-status: draft
+status: in-progress
 type: epic
 priority: deferred
 created_at: 2026-06-19T11:14:41Z
-updated_at: 2026-06-19T11:14:41Z
+updated_at: 2026-06-19T15:58:20Z
 parent: registry-vk2i
 ---
 

@@ -115,8 +115,13 @@ func GenerateProvider(extractDir, contractRoot string) (string, error) {
 	}
 	sort.Slice(resources, func(i, j int) bool { return resources[i].Name < resources[j].Name })
 
-	// nivis gen v0.4.0 emits resources only; datasources/functions/guides are
-	// empty lists for now (kept present so the contract validates).
+	// nivis gen emits resource constructors only; datasources/functions/guides
+	// are empty lists for now (kept present so the contract validates).
+	//
+	// schema_extractable is true here because reaching GenerateProvider means a
+	// metadata.json was written by a SUCCESSFUL extract — the schema WAS fetched
+	// from the binary. A datasource-only provider (no resources) is still
+	// schema-extractable; it simply has no constructors.
 	pv := ProviderVersion{
 		ID: meta.Version,
 		Docs: Docs{
@@ -125,7 +130,7 @@ func GenerateProvider(extractDir, contractRoot string) (string, error) {
 			Functions:   []DocItem{},
 			Guides:      []DocItem{},
 		},
-		Compat: compat.Compute(meta, len(resources) > 0),
+		Compat: compat.Compute(meta, true),
 	}
 
 	indexPath := filepath.Join(outDir, "index.json")

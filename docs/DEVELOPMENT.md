@@ -258,6 +258,25 @@ nix develop -c bash -c 'cd frontend && pnpm dev'   # browse http://127.0.0.1:517
 
 To run only part of it, run the stage drivers directly (see each stage above).
 
+### Full catalog (all 50 seed providers)
+
+`scripts/scale.sh` runs the pipeline over **every** provider in `seed.json`
+(resiliently — a single failure is skipped + logged), generates the full
+contract, writes an auditable coverage report (`coverage.json`), and builds the
+site:
+
+```sh
+nix develop -c scripts/scale.sh        # ~50 providers → ~10k contract files
+nix develop -c bash -c 'SKIP_BUILD=1 scripts/scale.sh'   # extract+generate only
+```
+
+This is milestone-06 work and scales **extraction + contract only** — it does
+**not** deploy. The `tools/extract -report <path>` flag writes the coverage JSON
+(per-provider extracted/constructor-count vs. skipped/reason). Note: version
+selection prefers the latest **stable** release (an `-rc`/`-beta` is only picked
+when a provider has published no stable version), and datasource-only providers
+(e.g. `hashicorp/http`) extract as "ok" with 0 constructors.
+
 ## Testing
 
 - **`go test ./...`** (from `tools/`) — unit tests for every stage. The e2e tests

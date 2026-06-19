@@ -298,3 +298,56 @@ func TestLatestVersionIndex(t *testing.T) {
 		t.Errorf("latest = %q, want 1.10.0 (numeric, not lexical)", got)
 	}
 }
+
+// TestLatestVersionPrefersStable: a higher prerelease must NOT be chosen over a
+// lower stable release (the signalfx 10.0.0-rc1 vs 9.30.2 case).
+func TestLatestVersionPrefersStable(t *testing.T) {
+	type ver = struct {
+		Version   string     `json:"version"`
+		Protocols []string   `json:"protocols"`
+		Platforms []Platform `json:"platforms"`
+	}
+	vr := versionsResp{Versions: []ver{
+		{Version: "9.30.2"},
+		{Version: "10.0.0-rc1"},
+		{Version: "10.0.0-rc.9"},
+	}}
+	if got := vr.Versions[latestVersionIndex(vr)].Version; got != "9.30.2" {
+		t.Errorf("latest = %q, want 9.30.2 (stable beats a higher prerelease)", got)
+	}
+}
+
+// TestLatestVersionPrereleaseFallback: when ONLY prereleases exist, pick the
+// highest prerelease (proxmox-style: only -rc versions published).
+func TestLatestVersionPrereleaseFallback(t *testing.T) {
+	type ver = struct {
+		Version   string     `json:"version"`
+		Protocols []string   `json:"protocols"`
+		Platforms []Platform `json:"platforms"`
+	}
+	vr := versionsResp{Versions: []ver{
+		{Version: "3.0.1-rc01"},
+		{Version: "3.0.2-rc07"},
+		{Version: "3.0.2-rc01"},
+	}}
+	if got := vr.Versions[latestVersionIndex(vr)].Version; got != "3.0.2-rc07" {
+		t.Errorf("latest = %q, want 3.0.2-rc07 (highest prerelease when no stable)", got)
+	}
+}
+
+func TestIsPrerelease(t *testing.T) {
+	for _, c := range []struct {
+		v   string
+		pre bool
+	}{
+		{"3.9.0", false},
+		{"10.0.0-rc1", true},
+		{"15.0.0-rc.9", true},
+		{"1.7.5-rc1", true},
+		{"4.78.0", false},
+	} {
+		if got := isPrerelease(c.v); got != c.pre {
+			t.Errorf("isPrerelease(%q) = %v, want %v", c.v, got, c.pre)
+		}
+	}
+}
