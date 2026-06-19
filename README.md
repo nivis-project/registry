@@ -21,11 +21,16 @@ start there. Architecture is in **`REGISTRY-DESIGN.md`**.
 
 ## Develop
 
+See **[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)** for the full developer guide
+(toolchain, the pipeline stage by stage, running it locally, testing, extending).
+
 ```sh
-nix develop          # go, pnpm, jj, beans, openspec, nivis on PATH
-nix flake check      # must stay green
-beans list --json    # the board
-openspec list        # the changes
+nix develop                       # go, pnpm, jj, beans, openspec, nivis on PATH
+nix develop -c scripts/proof.sh   # the whole pipeline: extract → contract → build site
+nix develop -c bash -c 'cd frontend && pnpm dev'   # browse at http://127.0.0.1:5173/
+nix flake check                   # the harness gate — must stay green
+beans list --json                 # the board
+openspec list                     # the changes
 ```
 
 ## License
