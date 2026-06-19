@@ -81,6 +81,10 @@
             # network-touching paths are gated behind env (NIVIS_SRC) and skip.
             doCheck = true;
           };
+
+          # The nivis CLI from the pinned input — exposed so CI (and devs) get the
+          # exact `nivis gen` the pipeline expects. `nix build .#nivis-cli`.
+          nivis-cli = nivisCliFor system;
         }
       );
 
@@ -116,5 +120,9 @@
       );
 
       formatter = forAllSystems (system: (pkgsFor system).nixfmt);
+
+      # The pinned nivis revision — CI checks out the matching source to build
+      # the hermetic fake provider against the same nivis the CLI came from.
+      nivisRev = nivis.rev;
     };
 }

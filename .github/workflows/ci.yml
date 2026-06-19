@@ -41,6 +41,32 @@ jobs:
             echo "gofmt found unformatted files:"; echo "$unformatted"; exit 1
           fi
 
+  e2e-hermetic:
+    name: hermetic e2e (fake provider, offline pipeline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      # Build the nivis CLI and check out its source (for the fake provider) via
+      # the pinned flake input — no provider network or credentials are used by
+      # the pipeline itself, which is the hermetic property under test.
+      - name: build nivis CLI
+        run: nix build .#nivis-cli --out-link nivis-cli
+      - name: check out nivis source (matching the pinned input)
+        run: |
+          rev=$(nix eval --raw .#nivisRev)
+          git clone https://github.com/wearetechnative/nivis.git nivis-src
+          git -C nivis-src checkout "$rev"
+      - name: run hermetic e2e
+        working-directory: tools
+        run: |
+          NIVIS_BIN="$GITHUB_WORKSPACE/nivis-cli/bin/nivis" \
+          NIVIS_SRC="$GITHUB_WORKSPACE/nivis-src" \
+          go test ./e2e/ -run TestHermeticPipeline -v
+
   frontend:
     name: frontend build + test
     runs-on: ubuntu-latest
