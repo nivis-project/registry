@@ -83,6 +83,43 @@ func TestRenderDocIsNixNotHCL(t *testing.T) {
 	}
 }
 
+// TestSignatureWrapsWhenWide: a constructor with many arguments must render the
+// signature one-argument-per-line (not an unreadable one-liner). random_password
+// has 1 required + 11 optional args, well past the wrap width.
+func TestSignatureWrapsWhenWide(t *testing.T) {
+	c := ParseConstructor(realRandomPassword)
+	sig := signature(c)
+	if !strings.HasPrefix(sig, "{\n") {
+		t.Fatalf("wide signature must wrap to multi-line, got:\n%s", sig)
+	}
+	// Each argument on its own indented line; required args have no `?`, optional
+	// args keep `? null`, and the last line is the closing brace.
+	if !strings.Contains(sig, "\n  name,\n") {
+		t.Errorf("wrapped signature should list `name` on its own line:\n%s", sig)
+	}
+	if !strings.Contains(sig, "\n  length,\n") {
+		t.Errorf("required `length` should appear without `? null`:\n%s", sig)
+	}
+	if !strings.Contains(sig, "\n  keepers ? null,\n") {
+		t.Errorf("optional `keepers` should keep `? null`:\n%s", sig)
+	}
+	if !strings.HasSuffix(sig, "\n  overrides ? {}\n}") {
+		t.Errorf("last argument has no trailing comma, then a closing brace:\n%s", sig)
+	}
+}
+
+// TestSignatureStaysOneLineWhenShort: a small constructor stays on one line.
+func TestSignatureStaysOneLineWhenShort(t *testing.T) {
+	c := Constructor{Provider: "null", Type: "null_resource", Optional: []string{"triggers"}}
+	sig := signature(c)
+	if strings.Contains(sig, "\n") {
+		t.Errorf("a short signature should stay on one line, got:\n%s", sig)
+	}
+	if sig != "{ name, triggers ? null, overrides ? {} }" {
+		t.Errorf("unexpected one-line signature: %q", sig)
+	}
+}
+
 // writeFixtureProvider lays out an extraction-output tree for one provider
 // version with the given constructors, mimicking tools/extract.
 func writeFixtureProvider(t *testing.T, root, ns, name, version string, protocols []string, platforms [][2]string, constructors map[string]string) string {

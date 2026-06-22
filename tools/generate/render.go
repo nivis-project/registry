@@ -71,6 +71,22 @@ func RenderDoc(c Constructor) string {
 }
 
 // signature renders the constructor lambda argument set in Nix.
+// sigWrapWidth is the column past which a one-line constructor signature is
+// broken to one argument per line. Roughly a comfortable code-block width so the
+// signature stays readable when a resource has many (often mandatory) arguments.
+const sigWrapWidth = 72
+
+// signature renders the constructor's argument set. It is width-aware: a short
+// signature stays on one line; a wide one breaks to one argument per line —
+//
+//	{
+//	  name,
+//	  arg1,
+//	  arg2 ? null,
+//	  overrides ? {}
+//	}
+//
+// so a resource with many mandatory arguments stays readable.
 func signature(c Constructor) string {
 	parts := []string{"name"}
 	for _, a := range c.Required {
@@ -80,7 +96,24 @@ func signature(c Constructor) string {
 		parts = append(parts, a+" ? null")
 	}
 	parts = append(parts, "overrides ? {}")
-	return "{ " + strings.Join(parts, ", ") + " }"
+
+	oneLine := "{ " + strings.Join(parts, ", ") + " }"
+	if len(oneLine) <= sigWrapWidth {
+		return oneLine
+	}
+	// Wrap: one argument per line, two-space indented, trailing-comma-free last.
+	var b strings.Builder
+	b.WriteString("{\n")
+	for i, p := range parts {
+		b.WriteString("  ")
+		b.WriteString(p)
+		if i < len(parts)-1 {
+			b.WriteString(",")
+		}
+		b.WriteString("\n")
+	}
+	b.WriteString("}")
+	return b.String()
 }
 
 // example renders a minimal instantiation: name + each required argument.
