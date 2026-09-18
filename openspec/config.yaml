@@ -1,2 +1,5 @@
 schema: spec-driven
-store: nivis
+
+# The OpenSpec store this project's changes and specs live in
+# (github.com/nivis-project/nivis-openspec-stores, see `openspec store list`).
+store: registry
