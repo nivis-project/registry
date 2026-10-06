@@ -1,77 +1,77 @@
 {
   "generated_from": "https://registry.terraform.io/v1/providers",
-  "count": 58,
+  "count": 59,
   "providers": [
     {
       "address": "hashicorp/aws",
       "tier": "official",
-      "downloads": 6566456274,
+      "downloads": 7977881763,
       "reason": "anchor"
     },
     {
       "address": "hashicorp/azurerm",
       "tier": "official",
-      "downloads": 1640636392,
+      "downloads": 2039137086,
       "reason": "anchor"
     },
     {
       "address": "hashicorp/google",
       "tier": "official",
-      "downloads": 2082562871,
+      "downloads": 2633404619,
       "reason": "anchor"
     },
     {
       "address": "Telmate/proxmox",
       "tier": "",
       "downloads": 0,
-      "reason": "anchor:proxmox"
+      "reason": "anchor"
     },
     {
       "address": "hashicorp/random",
       "tier": "official",
-      "downloads": 2724287590,
+      "downloads": 3374079554,
       "reason": "utility"
     },
     {
       "address": "hashicorp/null",
       "tier": "official",
-      "downloads": 2122127467,
+      "downloads": 2591100938,
       "reason": "utility"
     },
     {
       "address": "hashicorp/local",
       "tier": "official",
-      "downloads": 1047491737,
+      "downloads": 1278383758,
       "reason": "utility"
     },
     {
       "address": "hashicorp/tls",
       "tier": "official",
-      "downloads": 845181025,
+      "downloads": 1048506031,
       "reason": "utility"
     },
     {
       "address": "hashicorp/time",
       "tier": "official",
-      "downloads": 1026899352,
+      "downloads": 1333052273,
       "reason": "utility"
     },
     {
       "address": "hashicorp/http",
       "tier": "official",
-      "downloads": 328001015,
+      "downloads": 432818230,
       "reason": "utility"
     },
     {
       "address": "hashicorp/external",
       "tier": "official",
-      "downloads": 896818786,
+      "downloads": 1124094486,
       "reason": "utility"
     },
     {
       "address": "hashicorp/cloudinit",
       "tier": "official",
-      "downloads": 239148471,
+      "downloads": 295571145,
       "reason": "utility"
     },
     {
@@ -123,231 +123,237 @@
       "reason": "europe"
     },
     {
-      "address": "hashicorp/kubernetes",
-      "tier": "official",
-      "downloads": 1408819253,
-      "reason": "popular"
+      "address": "nivis-project/hcloudimage",
+      "tier": "",
+      "downloads": 0,
+      "reason": "curated"
     },
     {
-      "address": "hashicorp/template",
+      "address": "hashicorp/kubernetes",
       "tier": "official",
-      "downloads": 1090626209,
+      "downloads": 1712982965,
       "reason": "popular"
     },
     {
       "address": "hashicorp/google-beta",
       "tier": "official",
-      "downloads": 1075995828,
+      "downloads": 1337580763,
+      "reason": "popular"
+    },
+    {
+      "address": "hashicorp/template",
+      "tier": "official",
+      "downloads": 1176057331,
       "reason": "popular"
     },
     {
       "address": "hashicorp/vault",
       "tier": "official",
-      "downloads": 777790083,
+      "downloads": 954194659,
       "reason": "popular"
     },
     {
       "address": "hashicorp/archive",
       "tier": "official",
-      "downloads": 700216472,
-      "reason": "popular"
-    },
-    {
-      "address": "hashicorp/helm",
-      "tier": "official",
-      "downloads": 642517652,
+      "downloads": 885388108,
       "reason": "popular"
     },
     {
       "address": "hashicorp/azuread",
       "tier": "official",
-      "downloads": 637046537,
+      "downloads": 806052120,
+      "reason": "popular"
+    },
+    {
+      "address": "hashicorp/helm",
+      "tier": "official",
+      "downloads": 783276539,
       "reason": "popular"
     },
     {
       "address": "hashicorp/tfe",
       "tier": "official",
-      "downloads": 160681275,
+      "downloads": 206797729,
       "reason": "popular"
     },
     {
       "address": "hashicorp/dns",
       "tier": "official",
-      "downloads": 104291231,
+      "downloads": 128379350,
       "reason": "popular"
     },
     {
       "address": "hashicorp/consul",
       "tier": "official",
-      "downloads": 97495343,
+      "downloads": 114123044,
       "reason": "popular"
     },
     {
       "address": "hashicorp/nomad",
       "tier": "official",
-      "downloads": 46751779,
+      "downloads": 51156907,
       "reason": "popular"
     },
     {
       "address": "hashicorp/ad",
       "tier": "official",
-      "downloads": 4485568,
+      "downloads": 5262896,
       "reason": "popular"
     },
     {
       "address": "hashicorp/azurestack",
       "tier": "official",
-      "downloads": 1816337,
+      "downloads": 1871333,
       "reason": "popular"
     },
     {
       "address": "cloudflare/cloudflare",
       "tier": "partner",
-      "downloads": 272482611,
-      "reason": "popular"
-    },
-    {
-      "address": "newrelic/newrelic",
-      "tier": "partner",
-      "downloads": 137287162,
+      "downloads": 357161629,
       "reason": "popular"
     },
     {
       "address": "PagerDuty/pagerduty",
       "tier": "partner",
-      "downloads": 135804649,
+      "downloads": 157522165,
+      "reason": "popular"
+    },
+    {
+      "address": "newrelic/newrelic",
+      "tier": "partner",
+      "downloads": 154825101,
       "reason": "popular"
     },
     {
       "address": "aliyun/alicloud",
       "tier": "partner",
-      "downloads": 62450352,
-      "reason": "popular"
-    },
-    {
-      "address": "tencentcloudstack/tencentcloud",
-      "tier": "partner",
-      "downloads": 44654801,
+      "downloads": 68576671,
       "reason": "popular"
     },
     {
       "address": "rancher/rancher2",
       "tier": "partner",
-      "downloads": 42657583,
+      "downloads": 54595490,
+      "reason": "popular"
+    },
+    {
+      "address": "tencentcloudstack/tencentcloud",
+      "tier": "partner",
+      "downloads": 45970003,
       "reason": "popular"
     },
     {
       "address": "SumoLogic/sumologic",
       "tier": "partner",
-      "downloads": 30844548,
+      "downloads": 41081684,
       "reason": "popular"
     },
     {
       "address": "aztfmod/azurecaf",
       "tier": "partner",
-      "downloads": 25287287,
-      "reason": "popular"
-    },
-    {
-      "address": "ns1-terraform/ns1",
-      "tier": "partner",
-      "downloads": 25107109,
-      "reason": "popular"
-    },
-    {
-      "address": "fastly/fastly",
-      "tier": "partner",
-      "downloads": 19700464,
+      "downloads": 30542068,
       "reason": "popular"
     },
     {
       "address": "launchdarkly/launchdarkly",
       "tier": "partner",
-      "downloads": 18521544,
+      "downloads": 26226020,
       "reason": "popular"
     },
     {
-      "address": "splunk-terraform/signalfx",
+      "address": "ns1-terraform/ns1",
       "tier": "partner",
-      "downloads": 15946418,
+      "downloads": 26189843,
       "reason": "popular"
     },
     {
-      "address": "linode/linode",
+      "address": "fastly/fastly",
       "tier": "partner",
-      "downloads": 15569798,
+      "downloads": 23406348,
       "reason": "popular"
     },
     {
       "address": "hetznercloud/hcloud",
       "tier": "partner",
-      "downloads": 15145450,
+      "downloads": 20188196,
+      "reason": "popular"
+    },
+    {
+      "address": "splunk-terraform/signalfx",
+      "tier": "partner",
+      "downloads": 19553556,
+      "reason": "popular"
+    },
+    {
+      "address": "linode/linode",
+      "tier": "partner",
+      "downloads": 18474628,
       "reason": "popular"
     },
     {
       "address": "strongdm/sdm",
       "tier": "partner",
-      "downloads": 14693434,
-      "reason": "popular"
-    },
-    {
-      "address": "digitalocean/digitalocean",
-      "tier": "partner",
-      "downloads": 12050745,
+      "downloads": 17127359,
       "reason": "popular"
     },
     {
       "address": "akamai/akamai",
       "tier": "partner",
-      "downloads": 11541830,
+      "downloads": 16272324,
+      "reason": "popular"
+    },
+    {
+      "address": "digitalocean/digitalocean",
+      "tier": "partner",
+      "downloads": 15545089,
       "reason": "popular"
     },
     {
       "address": "heroku/heroku",
       "tier": "partner",
-      "downloads": 10431023,
+      "downloads": 10769512,
       "reason": "popular"
     },
     {
       "address": "vmware/vra",
       "tier": "partner",
-      "downloads": 8738194,
+      "downloads": 9665113,
       "reason": "popular"
     },
     {
       "address": "F5Networks/bigip",
       "tier": "partner",
-      "downloads": 8055213,
+      "downloads": 8547585,
       "reason": "popular"
     },
     {
       "address": "fortinetdev/fortios",
       "tier": "partner",
-      "downloads": 6025198,
+      "downloads": 7122443,
       "reason": "popular"
     },
     {
       "address": "vultr/vultr",
       "tier": "partner",
-      "downloads": 5565728,
+      "downloads": 6060840,
       "reason": "popular"
     },
     {
       "address": "exoscale/exoscale",
       "tier": "partner",
-      "downloads": 5424631,
+      "downloads": 5704560,
       "reason": "popular"
     },
     {
       "address": "AviatrixSystems/aviatrix",
       "tier": "partner",
-      "downloads": 4633212,
+      "downloads": 5295268,
       "reason": "popular"
     },
     {
       "address": "rancher/rke",
       "tier": "partner",
-      "downloads": 3055031,
+      "downloads": 3481731,
       "reason": "popular"
     }
   ]

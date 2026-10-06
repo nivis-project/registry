@@ -9,9 +9,9 @@
 // NOTE: the `filter=` query parameter is INERT — it does not filter. Page through
 // with limit/offset and sort client-side by (tier, downloads).
 //
-// The manifest is: top providers by downloads (favoring official/partner) UNION a
-// fixed utility allowlist UNION Telmate/proxmox, capped at MaxSeed, ordered
-// deterministically so seed.json is byte-stable across runs.
+// The manifest is: the pins declared in seed-pins.json UNION the top remaining
+// providers by downloads (favoring official/partner), ordered deterministically
+// so seed.json is byte-stable across runs.
 //
 // See openspec/changes/extraction-pipeline/specs/seed-selection/spec.md.
 package seed
@@ -27,47 +27,51 @@ import (
 	"time"
 )
 
-// UtilityAllowlist is always included regardless of download rank: tiny, ubiquitous
-// providers that appear in nearly every real Nivis config.
-var UtilityAllowlist = []string{
-	"hashicorp/random",
-	"hashicorp/null",
-	"hashicorp/local",
-	"hashicorp/tls",
-	"hashicorp/time",
-	"hashicorp/http",
-	"hashicorp/external",
-	"hashicorp/cloudinit",
+// Pin is one hand-maintained entry in seed-pins.json.
+type Pin struct {
+	Address string `json:"address"`
+	Reason  string `json:"reason"`
+	Note    string `json:"note,omitempty"`
 }
 
-// EuropeanAllowlist is always included regardless of download rank: the most
-// popular providers for European-sovereign services. These rank below the global
-// top-50 by download count but matter to European users, so they are pinned. Each
-// has a real, extractable provider (verified on the OpenTofu registry).
-// (hetznercloud/hcloud and exoscale/exoscale are European too but already rank in
-// the popularity list, so they need no explicit pin.)
-var EuropeanAllowlist = []string{
-	"scaleway/scaleway",        // Scaleway (FR)
-	"ovh/ovh",                  // OVHcloud (FR)
-	"UpCloudLtd/upcloud",       // UpCloud (FI)
-	"ionos-cloud/ionoscloud",   // IONOS (DE)
-	"stackitcloud/stackit",     // STACKIT / Schwarz Group (DE)
-	"cloudscale-ch/cloudscale", // cloudscale.ch (CH)
-	"aiven/aiven",              // Aiven managed data (FI)
-	"go-gandi/gandi",           // Gandi domains/DNS (FR)
+// PinFile is the seed-pins.json document: the providers that are always in the
+// seed regardless of download rank, in selection order, each carrying the
+// reason it was pinned.
+type PinFile struct {
+	Pinned []Pin `json:"pinned"`
 }
 
-// MustInclude are explicit anchors the seed must always contain.
-var MustInclude = []string{
-	"hashicorp/aws",
-	"hashicorp/azurerm",
-	"hashicorp/google",
-	"Telmate/proxmox", // most-popular proxmox provider (~16M downloads)
+// DefaultPinsPath is where the pin file lives relative to the repo root.
+const DefaultPinsPath = "seed-pins.json"
+
+// PopularFill is how many popularity-ranked providers follow the pins. The cap
+// is derived from it (see MaxSeedFor) so that pinning a provider grows the
+// manifest instead of evicting the lowest-ranked popular one.
+const PopularFill = 38
+
+// LoadPins reads and decodes a pin file.
+func LoadPins(path string) ([]Pin, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read pins %s: %w", path, err)
+	}
+	var pf PinFile
+	if err := json.Unmarshal(b, &pf); err != nil {
+		return nil, fmt.Errorf("decode pins %s: %w", path, err)
+	}
+	for i, pin := range pf.Pinned {
+		if _, _, err := ParseAddress(pin.Address); err != nil {
+			return nil, fmt.Errorf("pins %s entry %d: %w", path, i, err)
+		}
+		if pin.Reason == "" {
+			return nil, fmt.Errorf("pins %s entry %d (%s): reason must not be empty", path, i, pin.Address)
+		}
+	}
+	return pf.Pinned, nil
 }
 
-// MaxSeed caps the seed list. Raised from 50 to fit the European allowlist
-// without evicting popular global providers.
-const MaxSeed = 58
+// MaxSeedFor returns the manifest cap for a given pin set.
+func MaxSeedFor(pins []Pin) int { return len(pins) + PopularFill }
 
 // DefaultListURL is the public popularity API. The filter= param is inert; page
 // with limit/offset and sort client-side.
@@ -177,26 +181,25 @@ func Fetch(ctx context.Context, client *http.Client, listURL string, want int) (
 	return out, nil
 }
 
-// Select turns the raw popularity rows into the pinned seed: the explicit
-// anchors, utility allowlist, and European allowlist are always present (even if
-// absent from the fetched rows), then the most-popular remaining providers fill
-// up to MaxSeed. Output is deterministic: anchors first (in declared order), then
-// utilities, then European providers, then popular providers by
-// (tier, -downloads, address).
-func Select(rows []Provider) []SeedEntry {
+// Select turns the raw popularity rows into the pinned seed: every pin is
+// present (even if absent from the fetched rows), in file order, followed by the
+// most-popular remaining providers sorted by (tier, -downloads, address) up to
+// MaxSeedFor(pins).
+func Select(pins []Pin, rows []Provider) []SeedEntry {
 	byAddr := map[string]Provider{}
 	for _, p := range rows {
 		byAddr[p.Address()] = p
 	}
 
+	maxSeed := MaxSeedFor(pins)
 	var out []SeedEntry
 	seen := map[string]bool{}
 	add := func(addr, reason string) {
-		if seen[addr] || len(out) >= MaxSeed {
+		if seen[addr] || len(out) >= maxSeed {
 			return
 		}
 		seen[addr] = true
-		p := byAddr[addr] // zero-valued if not in the fetched rows
+		p := byAddr[addr]
 		out = append(out, SeedEntry{
 			Address:   addr,
 			Tier:      p.Tier,
@@ -205,24 +208,10 @@ func Select(rows []Provider) []SeedEntry {
 		})
 	}
 
-	// 1. Explicit anchors, in declared order.
-	for _, a := range MustInclude {
-		reason := "anchor"
-		if a == "Telmate/proxmox" {
-			reason = "anchor:proxmox"
-		}
-		add(a, reason)
-	}
-	// 2. Utility allowlist, in declared order.
-	for _, a := range UtilityAllowlist {
-		add(a, "utility")
-	}
-	// 3. European-service allowlist, in declared order.
-	for _, a := range EuropeanAllowlist {
-		add(a, "europe")
+	for _, pin := range pins {
+		add(pin.Address, pin.Reason)
 	}
 
-	// 4. Most-popular remaining, sorted deterministically.
 	popular := make([]Provider, 0, len(rows))
 	for _, p := range rows {
 		if !seen[p.Address()] {
@@ -237,7 +226,7 @@ func Select(rows []Provider) []SeedEntry {
 		if pi.Downloads != pj.Downloads {
 			return pi.Downloads > pj.Downloads
 		}
-		return pi.Address() < pj.Address() // stable tiebreak
+		return pi.Address() < pj.Address()
 	})
 	for _, p := range popular {
 		add(p.Address(), "popular")

@@ -96,11 +96,19 @@
           pkgs = pkgsFor system;
         in
         {
-          # Compiles tools/ and runs `go test ./...` in the Nix sandbox.
-          go-tests = pkgs.buildGoModule {
+          # Compiles tools/ and runs `go test ./...` in the Nix sandbox. The
+          # source is tools/ PLUS seed-pins.json: the seed tests load the
+          # committed pin file from the repo root, so the sandbox must contain
+          # it. modRoot puts the Go module back at tools/.
+          go-tests = pkgs.buildGoModule rec {
             pname = "nivis-registry-tools-tests";
             version = "0.1.0";
-            src = ./tools;
+            src = pkgs.runCommand "nivis-registry-tools-src" { } ''
+              mkdir -p $out/tools
+              cp -R ${./tools}/. $out/tools/
+              cp ${./seed-pins.json} $out/seed-pins.json
+            '';
+            modRoot = "tools";
             vendorHash = null;
             doCheck = true;
           };

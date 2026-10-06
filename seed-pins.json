@@ -1,0 +1,25 @@
+{
+  "pinned": [
+    { "address": "hashicorp/aws", "reason": "anchor" },
+    { "address": "hashicorp/azurerm", "reason": "anchor" },
+    { "address": "hashicorp/google", "reason": "anchor" },
+    { "address": "Telmate/proxmox", "reason": "anchor", "note": "most-popular proxmox provider (~16M downloads)" },
+    { "address": "hashicorp/random", "reason": "utility" },
+    { "address": "hashicorp/null", "reason": "utility" },
+    { "address": "hashicorp/local", "reason": "utility" },
+    { "address": "hashicorp/tls", "reason": "utility" },
+    { "address": "hashicorp/time", "reason": "utility" },
+    { "address": "hashicorp/http", "reason": "utility" },
+    { "address": "hashicorp/external", "reason": "utility" },
+    { "address": "hashicorp/cloudinit", "reason": "utility" },
+    { "address": "scaleway/scaleway", "reason": "europe", "note": "Scaleway (FR)" },
+    { "address": "ovh/ovh", "reason": "europe", "note": "OVHcloud (FR)" },
+    { "address": "UpCloudLtd/upcloud", "reason": "europe", "note": "UpCloud (FI)" },
+    { "address": "ionos-cloud/ionoscloud", "reason": "europe", "note": "IONOS (DE)" },
+    { "address": "stackitcloud/stackit", "reason": "europe", "note": "STACKIT / Schwarz Group (DE)" },
+    { "address": "cloudscale-ch/cloudscale", "reason": "europe", "note": "cloudscale.ch (CH)" },
+    { "address": "aiven/aiven", "reason": "europe", "note": "Aiven managed data (FI)" },
+    { "address": "go-gandi/gandi", "reason": "europe", "note": "Gandi domains/DNS (FR)" },
+    { "address": "nivis-project/hcloudimage", "reason": "curated", "note": "our own provider; published on the OpenTofu registry, never ranks in the popularity API" }
+  ]
+}
