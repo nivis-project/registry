@@ -2,8 +2,10 @@ package generate
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/nivis-project/registry/tools/module"
@@ -165,21 +167,54 @@ func TestGenerateModulesEmitsACatalogue(t *testing.T) {
 	}
 }
 
-func TestGenerateModulesOnEmptyRoot(t *testing.T) {
+// TestGenerateModulesReportsAnAbsentRoot: a path that does not exist is a
+// misconfiguration, and it must be visible. A silently empty catalogue is
+// exactly how the pipeline scripts shipped an empty modules.json while
+// reporting success.
+func TestGenerateModulesReportsAnAbsentRoot(t *testing.T) {
 	contractRoot := t.TempDir()
-	paths, err := GenerateModules(filepath.Join(t.TempDir(), "absent"), contractRoot, nil)
+	var logs []string
+	paths, err := GenerateModules(filepath.Join(t.TempDir(), "absent"), contractRoot,
+		func(f string, a ...interface{}) { logs = append(logs, fmt.Sprintf(f, a...)) })
 	if err != nil {
 		t.Fatalf("a missing module root should not error: %v", err)
 	}
 	if len(paths) != 0 {
 		t.Errorf("got %d paths, want none", len(paths))
 	}
+
+	var warned bool
+	for _, l := range logs {
+		if strings.Contains(l, "does not exist") {
+			warned = true
+		}
+	}
+	if !warned {
+		t.Errorf("a missing module root must be reported; logs were %v", logs)
+	}
+
 	b, err := os.ReadFile(filepath.Join(contractRoot, "registry", "modules.json"))
 	if err != nil {
 		t.Fatalf("an empty catalogue must still be written: %v", err)
 	}
 	if string(b) != "[]\n" {
 		t.Errorf("empty catalogue = %q, want []", b)
+	}
+}
+
+// TestGenerateModulesIsQuietOnAnEmptyRoot: genuinely having no modules yet is
+// not a misconfiguration and must not be reported as one.
+func TestGenerateModulesIsQuietOnAnEmptyRoot(t *testing.T) {
+	moduleRoot, contractRoot := t.TempDir(), t.TempDir()
+	var logs []string
+	if _, err := GenerateModules(moduleRoot, contractRoot,
+		func(f string, a ...interface{}) { logs = append(logs, fmt.Sprintf(f, a...)) }); err != nil {
+		t.Fatalf("an existing but empty module root should not error: %v", err)
+	}
+	for _, l := range logs {
+		if strings.Contains(l, "does not exist") {
+			t.Errorf("an existing root must not be reported as missing: %q", l)
+		}
 	}
 }
 

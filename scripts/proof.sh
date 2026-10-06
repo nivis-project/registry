@@ -18,6 +18,8 @@ cd "$ROOT"
 
 NIVIS_BIN="${NIVIS_BIN:-$(command -v nivis)}"
 EXTRACT_OUT="${EXTRACT_OUT:-extract-out}"
+MODULE_OUT="${MODULE_OUT:-module-out}"
+MODULE_PINS="${MODULE_PINS:-module-pins.json}"
 CONTRACT_DIR="frontend/public"
 
 # The proof set: credential-free utilities + the hyperscalers + proxmox. The
@@ -26,18 +28,24 @@ PROVIDERS=(random null tls Telmate/proxmox azurerm google)
 
 echo "==> nivis: $NIVIS_BIN ($("$NIVIS_BIN" --version 2>/dev/null || echo '?'))"
 
-echo "==> 1/3 extract: ${PROVIDERS[*]} (verify-before-execute -> nivis gen)"
+echo "==> 1/4 extract: ${PROVIDERS[*]} (verify-before-execute -> nivis gen)"
 ( cd tools && go run ./cmd/extract -nivis "$NIVIS_BIN" -out "../$EXTRACT_OUT" "${PROVIDERS[@]}" )
 
-echo "==> 2/3 generate: emit the registry-ui contract + Nix-rendered docs"
-( cd tools && go run ./cmd/generate -extract "../$EXTRACT_OUT" -contract "../$CONTRACT_DIR" )
+echo "==> 2/4 modules: catalogue every module in $MODULE_PINS (nix eval, cfg poisoned)"
+( cd tools && go run ./cmd/module \
+    -pins "../$MODULE_PINS" -extract "../$EXTRACT_OUT" -out "../$MODULE_OUT" )
 
-echo "==> 3/3 build the static site"
+echo "==> 3/4 generate: emit the registry-ui contract + Nix-rendered docs"
+( cd tools && go run ./cmd/generate \
+    -extract "../$EXTRACT_OUT" -modules "../$MODULE_OUT" -contract "../$CONTRACT_DIR" )
+
+echo "==> 4/4 build the static site"
 ( cd frontend && pnpm install --frozen-lockfile && pnpm build )
 
 echo
 echo "==> PROOF ARTIFACTS"
 echo "  contract:  $CONTRACT_DIR/registry/  ($(find "$CONTRACT_DIR/registry" -type f | wc -l) files)"
 echo "  catalog:   $CONTRACT_DIR/registry/catalog.json"
+echo "  modules:   $(python3 -c "import json;print(len(json.load(open('$CONTRACT_DIR/registry/modules.json'))))" 2>/dev/null || echo '?') catalogued"
 echo "  site:      frontend/dist/  (static, contract bundled)"
 echo "DONE — proof green."

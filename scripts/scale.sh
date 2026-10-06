@@ -19,24 +19,31 @@ cd "$ROOT"
 NIVIS_BIN="${NIVIS_BIN:-$(command -v nivis)}"
 SEED="${SEED:-seed.json}"
 EXTRACT_OUT="${EXTRACT_OUT:-extract-out}"
+MODULE_OUT="${MODULE_OUT:-module-out}"
+MODULE_PINS="${MODULE_PINS:-module-pins.json}"
 CONTRACT_DIR="frontend/public"
 REPORT="${REPORT:-coverage.json}"
 
 echo "==> nivis: $NIVIS_BIN ($("$NIVIS_BIN" --version 2>/dev/null || echo '?'))"
 echo "==> seed:  $SEED ($(python3 -c "import json;print(json.load(open('$SEED'))['count'])" 2>/dev/null || echo '?') providers)"
 
-echo "==> 1/3 extract: every provider in $SEED (verify-before-execute -> nivis gen)"
+echo "==> 1/4 extract: every provider in $SEED (verify-before-execute -> nivis gen)"
 ( cd tools && go run ./cmd/extract \
     -nivis "$NIVIS_BIN" -seed "../$SEED" -out "../$EXTRACT_OUT" -report "../$REPORT" )
 
-echo "==> 2/3 generate: emit the full registry-ui contract + Nix-rendered docs"
-( cd tools && go run ./cmd/generate -extract "../$EXTRACT_OUT" -contract "../$CONTRACT_DIR" )
+echo "==> 2/4 modules: catalogue every module in $MODULE_PINS (nix eval, cfg poisoned)"
+( cd tools && go run ./cmd/module \
+    -pins "../$MODULE_PINS" -extract "../$EXTRACT_OUT" -out "../$MODULE_OUT" )
+
+echo "==> 3/4 generate: emit the full registry-ui contract + Nix-rendered docs"
+( cd tools && go run ./cmd/generate \
+    -extract "../$EXTRACT_OUT" -modules "../$MODULE_OUT" -contract "../$CONTRACT_DIR" )
 
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
-  echo "==> 3/3 build the static site"
+  echo "==> 4/4 build the static site"
   ( cd frontend && pnpm install --frozen-lockfile && pnpm build )
 else
-  echo "==> 3/3 build skipped (SKIP_BUILD=1)"
+  echo "==> 4/4 build skipped (SKIP_BUILD=1)"
 fi
 
 echo
@@ -55,6 +62,7 @@ PY
 echo
 echo "==> ARTIFACTS"
 echo "  contract: $CONTRACT_DIR/registry/  ($(find "$CONTRACT_DIR/registry" -type f 2>/dev/null | wc -l) files)"
+echo "  modules:  $(python3 -c "import json;print(len(json.load(open('$CONTRACT_DIR/registry/modules.json'))))" 2>/dev/null || echo '?') catalogued"
 echo "  report:   $REPORT"
 [ "${SKIP_BUILD:-0}" != "1" ] && echo "  site:     frontend/dist/  (static, contract bundled)"
 echo "DONE — scale run complete (no deploy)."

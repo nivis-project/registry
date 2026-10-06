@@ -26,6 +26,12 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `seed-pins.json` at the repo root lists every provider the seed always
   includes, with the reason for each. Adding one no longer means editing Go.
 
+### Fixed
+
+- The pipeline scripts now catalogue modules. They generated the contract
+  without ever running the module extractor, so a full run produced an empty
+  module list while reporting success.
+
 ### Changed
 
 - The provider catalogue moved from the site root to `/providers`, so it is a

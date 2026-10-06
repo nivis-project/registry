@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/nivis-project/registry/tools/module"
 )
@@ -95,6 +94,12 @@ func GenerateModule(moduleDir, contractRoot string) (string, error) {
 func GenerateModules(moduleRoot, contractRoot string, log func(string, ...interface{})) ([]string, error) {
 	if log == nil {
 		log = func(string, ...interface{}) {}
+	}
+	if _, statErr := os.Stat(moduleRoot); os.IsNotExist(statErr) {
+		// Distinct from "no modules extracted": a path that does not exist is a
+		// misconfiguration, and reporting it is what stops an empty catalogue
+		// from being mistaken for a complete one.
+		log("warn module root %s does not exist; writing an empty module catalogue", moduleRoot)
 	}
 	dirs, err := findModuleDirs(moduleRoot)
 	if err != nil {
@@ -221,5 +226,3 @@ func cfgOrEmpty(c []module.CfgKey) []module.CfgKey {
 	}
 	return c
 }
-
-var _ = strings.TrimSpace
