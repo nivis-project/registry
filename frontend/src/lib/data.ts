@@ -3,7 +3,13 @@
 // plain files (no live backend). The later API (API Gateway + Lambda) serves the
 // SAME paths, so this layer does not change when hosting evolves.
 
-import type { ProviderRef, ProviderVersion } from "./contract";
+import type {
+  ModuleCatalogEntry,
+  ModuleRef,
+  ModuleVersion,
+  ProviderRef,
+  ProviderVersion,
+} from "./contract";
 
 // contractBase is where the contract tree is served from. Relative so the SPA
 // works under any mount point (CloudFront subpath, file://-ish previews, etc.).
@@ -50,4 +56,27 @@ export async function fetchCatalog(): Promise<CatalogEntry[]> {
   const res = await fetch("registry/catalog.json");
   if (!res.ok) throw new Error(`GET catalog -> ${res.status}`);
   return (await res.json()) as CatalogEntry[];
+}
+
+// --- modules ---------------------------------------------------------------
+
+const moduleBase = "registry/docs/modules";
+
+function moduleIndexURL(ref: ModuleRef): string {
+  return `${moduleBase}/${ref.owner}/${ref.name}/${ref.version}/index.json`;
+}
+
+// fetchModuleCatalog lists the modules present in the static contract.
+export async function fetchModuleCatalog(): Promise<ModuleCatalogEntry[]> {
+  const res = await fetch("registry/modules.json");
+  if (!res.ok) throw new Error(`GET modules catalog -> ${res.status}`);
+  return (await res.json()) as ModuleCatalogEntry[];
+}
+
+// fetchModuleVersion loads one module version's derived structure.
+export async function fetchModuleVersion(
+  ref: ModuleRef,
+): Promise<ModuleVersion> {
+  const body = await getText(moduleIndexURL(ref));
+  return JSON.parse(body) as ModuleVersion;
 }

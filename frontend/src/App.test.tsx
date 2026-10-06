@@ -36,6 +36,8 @@ function stubContract() {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string) => {
+      if (url.endsWith("registry/modules.json"))
+        return new Response("[]", { status: 200 });
       if (url.endsWith("catalog.json"))
         return new Response(JSON.stringify(catalog), { status: 200 });
       if (url.endsWith("index.json"))
@@ -131,8 +133,8 @@ describe("navigation", () => {
       expect(document.querySelector("main")?.textContent?.trim()).not.toBe("");
       unmount();
     }
-    // Modules is named on the front page, but is not a nav entry yet.
-    expect(sections.some((s) => /modules/i.test(s.label))).toBe(false);
+    // Both sections that exist are listed; neither is a dead entry.
+    expect(sections.map((s) => s.label)).toEqual(["Providers", "Modules"]);
   });
 
   it("returns to the front page through the router, without a document load", async () => {

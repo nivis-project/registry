@@ -45,3 +45,69 @@ export interface ProviderRef {
   name: string;
   version: string;
 }
+
+// --- modules ---------------------------------------------------------------
+// Mirrored from tools/generate/modules.go. A nivis module is a flake output,
+// not a binary, so its structure is DERIVED by evaluating it rather than read
+// from a schema call. The record says how much of the page is machine-checked.
+
+// ModuleCoord is one resource or data source a module declares. `docs` is the
+// provider version documenting its type, absent when the registry does not
+// catalogue that provider.
+export interface ModuleCoord {
+  provider: string;
+  type: string;
+  name: string;
+  docs?: string;
+}
+
+// ModuleCfgKey is one configuration path a module reads. Nested paths arrive
+// in full ("ses.from"), and a path under an optional ancestor is itself
+// optional.
+export interface ModuleCfgKey {
+  path: string;
+  required: boolean;
+}
+
+export type CfgSource = "scanned" | "declared";
+
+// ModuleRecord is the module counterpart of CompatRecord: what was derived and
+// what was not.
+export interface ModuleRecord {
+  structure_extractable: boolean;
+  cfg_source: CfgSource;
+  providers_resolved: number;
+  providers_total: number;
+  failure_reason?: string;
+}
+
+export interface ModuleVersion {
+  id: string; // version
+  owner: string;
+  name: string;
+  tag?: string;
+  rev?: string;
+  description?: string;
+  resources: ModuleCoord[];
+  data_sources: ModuleCoord[];
+  outputs: string[];
+  composition?: string[];
+  cfg: ModuleCfgKey[];
+  record: ModuleRecord;
+  readme?: string;
+}
+
+export interface ModuleCatalogEntry {
+  owner: string;
+  name: string;
+  version: string;
+  description?: string;
+  derived: boolean;
+}
+
+// ModuleRef identifies a module version within the contract tree.
+export interface ModuleRef {
+  owner: string;
+  name: string;
+  version: string;
+}

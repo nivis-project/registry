@@ -30,13 +30,19 @@ export function HomePage() {
           </span>
         </Link>
 
-        <div className="rounded-lg border border-dashed border-slate-300 bg-white/50 p-5">
-          <h2 className="font-semibold text-slate-500">Modules</h2>
-          <p className="mt-1 text-sm text-slate-500">
+        <Link
+          to="/modules"
+          className="block rounded-lg border border-slate-200 bg-white p-5 hover:border-sky-300 hover:bg-sky-50"
+        >
+          <h2 className="font-semibold text-slate-900">Modules</h2>
+          <p className="mt-1 text-sm text-slate-600">
             Composable nivis modules: whole pieces of infrastructure as a single
-            Nix import. Not published here yet.
+            Nix import. What each one creates is derived by evaluating it.
           </p>
-        </div>
+          <span className="mt-3 inline-block text-sm font-medium text-sky-700">
+            Browse modules →
+          </span>
+        </Link>
       </div>
 
       <section className="mt-10 max-w-2xl">

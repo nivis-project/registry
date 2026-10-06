@@ -9,6 +9,9 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Modules are browsable. `/modules` lists them and each has a page showing what
+  it creates, what it outputs and what it needs configured, with every resource
+  linking to the provider documenting it.
 - Nivis modules are catalogued alongside providers. Each module's resources,
   data sources and outputs are derived by evaluating the module itself, so the
   listing is machine-checked rather than copied from its documentation.

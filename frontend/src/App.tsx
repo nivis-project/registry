@@ -1,6 +1,8 @@
 import { Link, Route, Routes } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
 import { ProvidersPage } from "./pages/ProvidersPage";
+import { ModulesPage } from "./pages/ModulesPage";
+import { ModulePage } from "./pages/ModulePage";
 import { ProviderPage } from "./pages/ProviderPage";
 import { ResourcePage } from "./pages/ResourcePage";
 import { SiteNav } from "./components/SiteNav";
@@ -30,6 +32,11 @@ export function App() {
           <Route
             path="/providers/:namespace/:name/:version/resources/:item"
             element={<ResourcePage />}
+          />
+          <Route path="/modules" element={<ModulesPage />} />
+          <Route
+            path="/modules/:owner/:name/:version"
+            element={<ModulePage />}
           />
         </Routes>
       </main>
