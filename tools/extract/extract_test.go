@@ -351,3 +351,165 @@ func TestIsPrerelease(t *testing.T) {
 		}
 	}
 }
+
+// fakeNivis writes a stand-in `nivis` CLI so RunGen and Extract are covered
+// without the real binary. mode picks the behaviour to exercise:
+//
+//	"ok"    - emits one .nix constructor under <out>/<identity>/
+//	"empty" - succeeds but emits nothing (a datasource-only provider)
+//	"fail"  - exits non-zero with a message on stderr
+func fakeNivis(t *testing.T, mode string) string {
+	t.Helper()
+	body := `#!/bin/sh
+out=""
+id=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --out) out="$2"; shift 2 ;;
+    --identity) id="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+`
+	switch mode {
+	case "ok":
+		body += `mkdir -p "$out/$id"
+printf 'mkResource { }\n' > "$out/$id/thing.nix"
+printf 'not nix\n' > "$out/$id/README.txt"
+exit 0
+`
+	case "empty":
+		body += "exit 0\n"
+	case "fail":
+		body += `echo "provider handshake failed" >&2
+exit 1
+`
+	}
+	path := filepath.Join(t.TempDir(), "nivis")
+	if err := os.WriteFile(path, []byte(body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestRunGenCollectsNixFiles(t *testing.T) {
+	c := New(fakeNivis(t, "ok"), t.TempDir())
+	out := t.TempDir()
+
+	files, err := c.RunGen(context.Background(), "/bin/prov", "alpha", out)
+	if err != nil {
+		t.Fatalf("RunGen: %v", err)
+	}
+	if len(files) != 1 {
+		t.Fatalf("RunGen returned %d files, want 1 (.nix only, README.txt ignored)", len(files))
+	}
+	if filepath.Base(files[0]) != "thing.nix" {
+		t.Errorf("got %q, want thing.nix", filepath.Base(files[0]))
+	}
+}
+
+// TestRunGenDatasourceOnlyProvider: gen succeeding with no constructors is a
+// VALID outcome, not an error. hashicorp/http and hashicorp/external are real
+// examples.
+func TestRunGenDatasourceOnlyProvider(t *testing.T) {
+	c := New(fakeNivis(t, "empty"), t.TempDir())
+
+	files, err := c.RunGen(context.Background(), "/bin/prov", "alpha", t.TempDir())
+	if err != nil {
+		t.Fatalf("RunGen on a datasource-only provider must not error: %v", err)
+	}
+	if len(files) != 0 {
+		t.Errorf("got %d files, want none", len(files))
+	}
+}
+
+func TestRunGenSurfacesStderr(t *testing.T) {
+	c := New(fakeNivis(t, "fail"), t.TempDir())
+
+	_, err := c.RunGen(context.Background(), "/bin/prov", "alpha", t.TempDir())
+	if err == nil {
+		t.Fatal("RunGen should fail when the CLI exits non-zero")
+	}
+	if !strings.Contains(err.Error(), "provider handshake failed") {
+		t.Errorf("error should carry the CLI's stderr, got: %v", err)
+	}
+}
+
+// TestExtractEndToEnd walks the whole per-provider pipeline hermetically:
+// resolve, verify, unpack, gen, and persist metadata.json beside the
+// constructors.
+func TestExtractEndToEnd(t *testing.T) {
+	fr := newFakeRegistry(t, "gamma", false)
+	c := clientForFake(fr, fakeNivis(t, "ok"), t.TempDir())
+	outRoot := t.TempDir()
+
+	res, err := c.Extract(context.Background(), "acme", "gamma", outRoot)
+	if err != nil {
+		t.Fatalf("Extract: %v", err)
+	}
+	if res.Skipped() {
+		t.Fatalf("Extract marked skipped: %s", res.SkipReason)
+	}
+	if res.Address != "acme/gamma" || res.Identity != "gamma" {
+		t.Errorf("got %q/%q, want acme/gamma identity gamma", res.Address, res.Identity)
+	}
+	if res.Metadata.Version != "1.2.3" {
+		t.Errorf("version = %q, want 1.2.3", res.Metadata.Version)
+	}
+	if len(res.NixFiles) != 1 {
+		t.Errorf("got %d constructors, want 1", len(res.NixFiles))
+	}
+
+	metaPath := filepath.Join(res.OutDir, "metadata.json")
+	body, err := os.ReadFile(metaPath)
+	if err != nil {
+		t.Fatalf("metadata.json not written beside the constructors: %v", err)
+	}
+	if !strings.Contains(string(body), `"version": "1.2.3"`) {
+		t.Errorf("metadata.json missing the resolved version:\n%s", body)
+	}
+	if !strings.Contains(string(body), `"6.0"`) {
+		t.Errorf("metadata.json missing the upstream protocols:\n%s", body)
+	}
+}
+
+// TestExtractRefusesCorruptArchive: a checksum mismatch must abort before the
+// binary is unpacked, let alone executed.
+func TestExtractRefusesCorruptArchive(t *testing.T) {
+	fr := newFakeRegistry(t, "delta", true)
+	c := clientForFake(fr, fakeNivis(t, "ok"), t.TempDir())
+	outRoot := t.TempDir()
+
+	if _, err := c.Extract(context.Background(), "acme", "delta", outRoot); err == nil {
+		t.Fatal("Extract must fail when the archive checksum does not match")
+	}
+	entries, _ := os.ReadDir(outRoot)
+	if len(entries) != 0 {
+		t.Errorf("nothing may be written for a corrupt archive, found %d entries", len(entries))
+	}
+}
+
+// TestExtractBinaryRejectsArchiveWithoutProvider guards the unpack path: an
+// archive that carries no terraform-provider-* entry is an error, not a silent
+// empty result.
+func TestExtractBinaryRejectsArchiveWithoutProvider(t *testing.T) {
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	w, err := zw.Create("LICENSE.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Write([]byte("no binary here")); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := extractBinary(t.TempDir(), buf.Bytes()); err == nil {
+		t.Error("extractBinary should reject an archive with no provider executable")
+	}
+	if _, err := extractBinary(t.TempDir(), []byte("not a zip at all")); err == nil {
+		t.Error("extractBinary should reject a non-zip payload")
+	}
+}
