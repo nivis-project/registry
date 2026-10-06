@@ -37,6 +37,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/nivis-project/registry/tools/version"
 )
 
 // DefaultRegistryHost is the OpenTofu registry used for resolution.
@@ -200,59 +202,20 @@ func (c *Client) resolve(ctx context.Context, namespace, name string) (downloadR
 	return dr, meta, nil
 }
 
-// latestVersionIndex returns the index of the highest version by numeric
-// (semver-ish) ordering. STABLE releases are preferred over prereleases: a
-// catalog wants the latest stable, not an `-rc`/`-beta` candidate. The highest
-// prerelease is only chosen when a provider has published no stable version.
+// latestVersionIndex returns the index of the best version in the registry
+// response, using the shared ordering in tools/version (stable above
+// prerelease) so provider versions and module tags are ranked by one rule.
 func latestVersionIndex(vr versionsResp) int {
-	type kv struct {
-		idx int
-		key [3]int
-		pre bool
-		raw string
-	}
-	out := make([]kv, 0, len(vr.Versions))
+	versions := make([]string, len(vr.Versions))
 	for i, v := range vr.Versions {
-		var key [3]int
-		parts := strings.FieldsFunc(v.Version, func(r rune) bool { return r < '0' || r > '9' })
-		for j := 0; j < 3 && j < len(parts); j++ {
-			n := 0
-			for _, ch := range parts[j] {
-				n = n*10 + int(ch-'0')
-			}
-			key[j] = n
-		}
-		out = append(out, kv{idx: i, key: key, pre: isPrerelease(v.Version), raw: v.Version})
+		versions[i] = v.Version
 	}
-	sort.Slice(out, func(i, j int) bool {
-		// Stable sorts above prerelease, so the last element is the best choice.
-		if out[i].pre != out[j].pre {
-			return out[i].pre // a prerelease (true) sorts "less"
-		}
-		for k := 0; k < 3; k++ {
-			if out[i].key[k] != out[j].key[k] {
-				return out[i].key[k] < out[j].key[k]
-			}
-		}
-		return out[i].raw < out[j].raw
-	})
-	return out[len(out)-1].idx
+	idx, _ := version.LatestStableIndex(versions)
+	return idx
 }
 
-// isPrerelease reports whether a version string is a prerelease (an `-rc`,
-// `-beta`, `-alpha`, `-pre`, or any `-suffix` in semver terms).
-func isPrerelease(version string) bool {
-	if i := strings.IndexByte(version, '-'); i >= 0 {
-		return true
-	}
-	lower := strings.ToLower(version)
-	for _, m := range []string{"rc", "beta", "alpha", "pre"} {
-		if strings.Contains(lower, m) {
-			return true
-		}
-	}
-	return false
-}
+// isPrerelease reports whether a version string is a prerelease.
+func isPrerelease(v string) bool { return version.IsPrerelease(v) }
 
 // --- verification (mirrors nivis verify-before-execute) ---
 

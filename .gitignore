@@ -17,11 +17,13 @@ frontend/.vite/
 # Generated registry contract (build output) — emitted by tools/generate
 /registry/docs/
 /registry/catalog.json
+/registry/modules.json
 frontend/public/registry/
 
 # Local provider cache / extraction scratch
 .cache/
 /extract-out/
+/module-out/
 
 # Claude Code local settings (machine-local, not shared)
 .claude/settings.local.json

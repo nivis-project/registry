@@ -17,7 +17,8 @@ import (
 
 func main() {
 	extractRoot := flag.String("extract", "extract-out", "extraction-output root (from tools/extract)")
-	contractRoot := flag.String("contract", ".", "contract root (writes <root>/registry/docs/providers/...)")
+	moduleRoot := flag.String("modules", "module-out", "module-extraction root (from tools/module)")
+	contractRoot := flag.String("contract", ".", "contract root (writes <root>/registry/docs/...)")
 	flag.Parse()
 
 	idxs, err := generate.GenerateAll(*extractRoot, *contractRoot, log.Printf)
@@ -25,6 +26,13 @@ func main() {
 		log.Fatalf("generate: %v", err)
 	}
 	log.Printf("generate: emitted %d provider contract(s)", len(idxs))
+
+	mods, err := generate.GenerateModules(*moduleRoot, *contractRoot, log.Printf)
+	if err != nil {
+		log.Fatalf("generate: modules: %v", err)
+	}
+	log.Printf("generate: emitted %d module contract(s)", len(mods))
+
 	if len(idxs) == 0 {
 		os.Exit(1)
 	}

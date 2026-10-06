@@ -1,0 +1,16 @@
+{
+  "modules": [
+    {
+      "owner": "wearetechnative",
+      "name": "nivis-aws-amplify-site",
+      "reason": "curated",
+      "note": "GitHub-connected AWS Amplify Hosting site; used by the registry's own deploy"
+    },
+    {
+      "owner": "wearetechnative",
+      "name": "nivis-aws-form-action",
+      "reason": "curated",
+      "note": "altcha-protected HTML-form backend; exposes apiEndpointRef for composition"
+    }
+  ]
+}

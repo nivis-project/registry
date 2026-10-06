@@ -9,6 +9,13 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Nivis modules are catalogued alongside providers. Each module's resources,
+  data sources and outputs are derived by evaluating the module itself, so the
+  listing is machine-checked rather than copied from its documentation.
+- Every resource a module creates links to the provider page documenting it.
+- Module pages state what was derived and what was not: whether the structure
+  evaluated, whether the configuration surface was inferred from source, and how
+  many resource types the registry could resolve.
 - A front page at the site root, explaining what the registry is and what the
   two compatibility tiers mean, instead of dropping a visitor straight into the
   provider list.

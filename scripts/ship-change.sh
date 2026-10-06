@@ -14,7 +14,7 @@ set -euo pipefail
 
 COVERAGE_MIN_TOTAL=70
 COVERAGE_MIN_CORE=80
-CORE_PACKAGES="seed extract compat generate"
+CORE_PACKAGES="seed extract compat generate module version"
 
 die() { printf '\n\033[31mship: %s\033[0m\n' "$*" >&2; exit 1; }
 step() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
