@@ -1,11 +1,11 @@
 ---
 # registry-hlqx
 title: nivis modules
-status: in-progress
+status: completed
 type: task
 priority: normal
 created_at: 2026-10-06T13:46:01Z
-updated_at: 2026-10-06T16:50:50Z
+updated_at: 2026-10-06T17:09:05Z
 ---
 
 The power of nix is having flakes and the module system. We have developed two modules already:
@@ -56,3 +56,32 @@ Worth knowing:
   `^{}` ref is the one to use; the other fetches the wrong tree.
 - Descriptions stay underived. That `hmacParam` must be an SSM SecureString is in the
   README and nowhere else, so the contract carries the README as a separate field.
+
+
+## Summary of Changes
+
+The listing is live. Shipped across three changes:
+
+- `module-pipeline` (`9efe7e15`): the extractor. Structure derived by evaluating each
+  module with `cfg = throw`, configuration surface scanned from source, resource types
+  resolved against the provider contract. Emits `registry/docs/modules/...` and
+  `registry/modules.json`.
+- `module-pipeline-wiring` (`839116cc`): the pipeline scripts never ran the extractor,
+  so a full run wrote an empty catalogue and reported success. Fixed, and an absent
+  module root is now reported rather than silently yielding `[]`.
+- `modules-section` (`824177ae`): `/modules` and `/modules/:owner/:name/:version`, plus
+  the Modules nav entry and a front-page link.
+
+Both modules render fully derived: amplify-site 0.1.0 (5 resources, 1 data source,
+4 outputs) and form-action 0.1.0 (9 resources, 3 outputs, exposes `apiEndpointRef`).
+All 15 resource types link into the provider contract.
+
+The page keeps the extractor's honesty: the derived structure leads, the README is a
+separate section marked as human-written, the configuration list says it was inferred
+by reading source, an uncatalogued resource type renders unlinked with the reason, and
+a module that fails to evaluate says so in place of its structure rather than appearing
+to create nothing.
+
+Not done, and not tracked here: a submission method. Worth its own bean if it is still
+wanted; it is entangled with the provider-side submission question parked on
+[[registry-adrr]].
