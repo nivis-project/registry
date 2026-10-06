@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchCatalog } from "../lib/data";
 
-// IndexPage lists the providers present in the static contract. v1 has no live
+// ProvidersPage lists the providers present in the static contract. v1 has no live
 // search backend (that is milestone 06); the catalog.json generated alongside
 // the contract is enough to browse and link into each provider.
-export function IndexPage() {
+export function ProvidersPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["catalog"],
     queryFn: fetchCatalog,
@@ -13,7 +13,7 @@ export function IndexPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Nivis Registry</h1>
+      <h1 className="text-2xl font-bold text-slate-900">Providers</h1>
       <p className="mt-1 text-slate-600">
         OpenTofu-compatible providers with Nix-native documentation. Every
         provider is compatible by design; references are derived from each
