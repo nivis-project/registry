@@ -72,9 +72,24 @@ linkable subset. A provider with no allowlist entry is never shown as `verified`
 
 ## Hosting
 
-- **v1**: static contract + SPA on **S3 + CloudFront** (we are AWS partners).
+- **v1**: the SPA is served by **AWS Amplify** at `registry.nivis.tf`, push-to-deploy on `main`,
+  applied as `050_amplify_registry_nivis_tf` in the account's nivis stack. This **supersedes the
+  S3 + CloudFront decision for the SPA**, which was locked before an in-account `nivis.tf` zone and a
+  working Amplify module existed.
+- **The contract is a build input, not a second origin.** Extraction runs out-of-band on a schedule
+  (`.github/workflows/contract-publish.yml`) and stages the generated tree in a **private** S3 bucket.
+  The Amplify build pulls it in and Vite bundles it, so the SPA and the data it reads deploy, and roll
+  back, as one artifact. There is no CloudFront distribution and no `/registry/` rewrite.
+  `scripts/verify-contract.sh` fails the build when the contract is absent or incomplete, so a bad
+  contract never reaches a visitor.
+- **When to change this**: bundling is right while the contract is tens of megabytes and wrong when it
+  is hundreds. Today it is ~51 MB over 11,719 files for 59 providers, which projects to ~216 MB at 250
+  providers. Past roughly **150 MB**, move to serving the contract from its own origin behind an
+  Amplify 200-rewrite on `/registry/<*>`. The migration is an infrastructure change only: the SPA
+  fetches relative paths (`frontend/src/lib/data.ts`, `vite.config.ts` `base: "./"`), so bundling and
+  proxying are indistinguishable to it.
 - **Later**: **API Gateway + Lambda** serving the same contract + a search endpoint (additive; the SPA
-  does not change). This is milestone `06`.
+  does not change). This is milestone `06`, and it plugs into the same relative-path seam.
 
 ## Repo layout
 

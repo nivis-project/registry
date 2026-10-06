@@ -1,0 +1,102 @@
+# Publish the generated contract.
+#
+# Extraction runs HERE and not in the Amplify build: tools/extract is not
+# incremental, provider binaries exceed Amplify's cache quota, and schemas
+# change when providers release rather than when we push. So this runs on a
+# schedule, never on push.
+#
+# The run stages the contract in a private S3 bucket and then triggers an
+# Amplify build, which pulls it in and bundles it (see amplify.yml). Publishing
+# without that trigger would leave a refreshed contract invisible.
+#
+# Repository configuration, all non-secret:
+#   vars.AWS_ROLE_ARN        role assumed through GitHub OIDC
+#   vars.AWS_REGION          eu-central-1
+#   vars.CONTRACT_BUCKET     s3://<bucket>/<prefix>
+#   vars.AMPLIFY_APP_ID      the registry-nivis-tf app
+#   vars.AMPLIFY_BRANCH      main
+name: contract-publish
+
+on:
+  schedule:
+    # Daily, off-peak. Cadence is a knob, not a design decision.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: contract-publish
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # GitHub OIDC; no long-lived access key exists
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    # No-op until the account side exists, so a scheduled run cannot fail
+    # noisily every night before the bucket and role are applied.
+    if: vars.CONTRACT_BUCKET != '' && vars.AWS_ROLE_ARN != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Extract and generate the contract
+        env:
+          # scale.sh writes the contract under frontend/public/.
+          SKIP_BUILD: "1"
+        run: nix develop --command scripts/scale.sh
+
+      - name: Verify the contract before publishing it
+        run: scripts/verify-contract.sh
+
+      # Publication order: documents and indexes first, catalogues LAST. A run
+      # that dies midway therefore leaves the previous catalogues authoritative
+      # rather than advertising providers whose documents never landed.
+      - name: Publish documents
+        run: |
+          aws s3 sync frontend/public/registry/docs "${{ vars.CONTRACT_BUCKET }}/docs" \
+            --only-show-errors
+
+      - name: Publish catalogues
+        run: |
+          aws s3 cp frontend/public/registry/catalog.json "${{ vars.CONTRACT_BUCKET }}/catalog.json" \
+            --only-show-errors
+          if [ -f frontend/public/registry/modules.json ]; then
+            aws s3 cp frontend/public/registry/modules.json "${{ vars.CONTRACT_BUCKET }}/modules.json" \
+              --only-show-errors
+          fi
+
+      - name: Prune orphaned objects
+        run: |
+          aws s3 sync frontend/public/registry "${{ vars.CONTRACT_BUCKET }}" \
+            --delete --only-show-errors
+
+      - name: Upload the coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.run_id }}
+          path: coverage.json
+          if-no-files-found: warn
+
+      # Only on success: a failed publication must not deploy.
+      - name: Trigger the site build
+        if: success() && vars.AMPLIFY_APP_ID != ''
+        run: |
+          aws amplify start-job \
+            --app-id "${{ vars.AMPLIFY_APP_ID }}" \
+            --branch-name "${{ vars.AMPLIFY_BRANCH }}" \
+            --job-type RELEASE \
+            --output text --query 'jobSummary.jobId'

@@ -1,0 +1,35 @@
+# Amplify build spec for the Nivis registry SPA.
+#
+# The build spec lives HERE rather than as `build_spec` on the aws_amplify_app
+# resource, so it versions with the code it builds and can change without a
+# nivis apply in the account repository.
+#
+# The contract (registry/catalog.json, registry/modules.json and the document
+# tree) is NOT in git: it is a build output of tools/generate, produced
+# out-of-band by .github/workflows/contract-publish.yml and staged in a private
+# S3 bucket. This build pulls it in and Vite bundles it, so the SPA and the data
+# it reads deploy as one artifact.
+#
+# Required Amplify environment variable:
+#   CONTRACT_BUCKET   s3://<bucket>/<prefix> holding the generated contract
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - corepack enable
+        - cd frontend
+        - pnpm install --frozen-lockfile
+        - cd ..
+        - bash scripts/fetch-contract.sh
+    build:
+      commands:
+        - cd frontend
+        - pnpm build
+  artifacts:
+    baseDirectory: frontend/dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - frontend/node_modules/**/*
