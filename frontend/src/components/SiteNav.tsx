@@ -1,8 +1,7 @@
 import { NavLink } from "react-router-dom";
 
-// Sections drive both the nav and the rule that we never link a section that
-// has no page: adding Modules later is one entry here, added together with its
-// route.
+// Sections drive both the nav and the rule that we never link a section with no
+// page: adding one later is one entry here, added together with its route.
 export const sections = [
   { label: "Providers", to: "/providers" },
   { label: "Modules", to: "/modules" },
@@ -10,17 +9,17 @@ export const sections = [
 
 export function SiteNav() {
   return (
-    <nav className="flex items-center gap-1">
+    <nav aria-label="Sections" className="flex items-center gap-1">
       {sections.map((s) => (
         <NavLink
           key={s.to}
           to={s.to}
           className={({ isActive }) =>
             [
-              "rounded-md px-3 py-1.5 text-sm font-medium",
+              "inline-flex h-11 items-center border-b-2 px-3 text-[15px]",
               isActive
-                ? "bg-sky-100 text-sky-900"
-                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                ? "border-warm font-semibold text-ink"
+                : "border-transparent text-muted hover:text-ink",
             ].join(" ")
           }
         >

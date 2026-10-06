@@ -1,48 +1,84 @@
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchCatalog } from "../lib/data";
+import { providers as copy } from "../content/site";
+import { EmptyState, ErrorState, SkeletonRows } from "../components/States";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
-// ProvidersPage lists the providers present in the static contract. v1 has no live
-// search backend (that is milestone 06); the catalog.json generated alongside
-// the contract is enough to browse and link into each provider.
+// Cards show the address only. catalog.json carries namespace, name, version
+// and a compat tier that reads "compatible by design" for every entry, so a
+// description, a tier chip or filter pills would all have to be invented.
+// catalog-enrichment adds the fields; until then the element is absent rather
+// than fabricated.
 export function ProvidersPage() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["catalog"],
     queryFn: fetchCatalog,
   });
+  const [filter, setFilter] = useState("");
+  useDocumentTitle(copy.title);
+
+  const shown = useMemo(() => {
+    if (!data) return [];
+    const q = filter.trim().toLowerCase();
+    if (!q) return data;
+    return data.filter((p) => `${p.namespace}/${p.name}`.toLowerCase().includes(q));
+  }, [data, filter]);
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Providers</h1>
-      <p className="mt-1 text-slate-600">
-        OpenTofu-compatible providers with Nix-native documentation. Every
-        provider is compatible by design; references are derived from each
-        provider's own schema.
-      </p>
+      <div className="flex flex-wrap items-baseline justify-between gap-4">
+        <h1 className="text-[clamp(28px,3.4vw,40px)] font-semibold text-ink">
+          {copy.title}
+          {data && <span className="ml-3 font-mono text-[18px] text-muted">{data.length}</span>}
+        </h1>
+        {data && data.length > 0 && (
+          <label className="flex h-11 items-center gap-2 rounded-box border border-line bg-surface px-3">
+            <span className="sr-only">{copy.filterLabel}</span>
+            <input
+              type="search"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder={copy.filterPlaceholder}
+              className="w-56 bg-transparent font-mono text-[15px] text-ink outline-none placeholder:text-muted"
+            />
+          </label>
+        )}
+      </div>
 
-      {isLoading && <p className="mt-6 text-slate-500">Loading catalog…</p>}
-      {error && <p className="mt-6 text-red-600">Failed to load catalog: {String(error)}</p>}
+      <p className="mt-2 max-w-2xl text-[15px] text-muted">{copy.generatedNote}</p>
 
-      <ul className="mt-6 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
-        {data?.map((p) => (
-          <li key={`${p.namespace}/${p.name}/${p.version}`}>
-            <Link
-              to={`/providers/${p.namespace}/${p.name}/${p.version}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-slate-50"
-            >
-              <span className="font-mono text-sky-700">
-                {p.namespace}/{p.name}
-              </span>
-              <span className="flex items-center gap-3 text-sm text-slate-500">
-                <span>{p.version}</span>
-                <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs text-sky-800">
-                  {p.tier}
-                </span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="mt-6">
+        {isLoading && <SkeletonRows rows={8} />}
+        {error && <ErrorState what="registry/catalog.json" error={error} onRetry={() => refetch()} />}
+        {data && data.length === 0 && <EmptyState>{copy.empty}</EmptyState>}
+        {data && data.length > 0 && shown.length === 0 && <EmptyState>{copy.noMatch}</EmptyState>}
+
+        {shown.length > 0 && (
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {shown.map((p) => (
+              <li key={`${p.namespace}/${p.name}/${p.version}`}>
+                <Link
+                  to={`/providers/${p.namespace}/${p.name}/${p.version}`}
+                  className="flex h-full flex-col justify-between rounded-card border border-line bg-surface p-4 hover:border-accent"
+                >
+                  <span className="font-mono text-[15px]">
+                    <span className="text-muted">{p.namespace}/</span>
+                    <span className="text-ink">{p.name}</span>
+                  </span>
+                  <span className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[13px] text-ink">
+                      {p.tier}
+                    </span>
+                    <span className="font-mono text-[13px] text-muted">{p.version}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

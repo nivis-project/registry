@@ -7,8 +7,16 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The registry has the Nivis visual identity: one indigo hue, self-hosted type,
+  a generated mark in place of the emoji, and light and dark themes that follow
+  your system by default and remember an override.
+
 ### Added
 
+- Pages now have a state for loading, for a failed fetch with a retry, for an
+  empty catalogue or filter, and for an unknown address.
 - Modules are browsable. `/modules` lists them and each has a page showing what
   it creates, what it outputs and what it needs configured, with every resource
   linking to the provider documenting it.

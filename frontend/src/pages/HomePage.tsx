@@ -1,75 +1,53 @@
 import { Link } from "react-router-dom";
+import { home } from "../content/site";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
-// HomePage orients a first-time visitor before dropping them into a catalogue.
-// Deliberately fetches nothing: this is the page that has to render when the
-// contract is missing or stale, so it carries no loading or error state, and no
-// provider count (a live one needs a fetch, a hardcoded one goes stale).
+// Fetches nothing, by requirement: this page has to render when the contract is
+// missing or stale, so it carries no counts and no loading or error state.
 export function HomePage() {
+  useDocumentTitle();
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-slate-900">Nivis Registry</h1>
-      <p className="mt-2 max-w-2xl text-slate-600">
-        OpenTofu-compatible providers, documented as Nix constructors. Every
-        reference here is derived from the provider binary's own schema, not
-        scraped from its documentation, so it always matches the binary you
-        actually run.
-      </p>
-
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <Link
-          to="/providers"
-          className="block rounded-lg border border-slate-200 bg-white p-5 hover:border-sky-300 hover:bg-sky-50"
-        >
-          <h2 className="font-semibold text-slate-900">Providers</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Browse the catalogue. Each provider lists its resources and data
-            sources as typed Nix constructors, with a compatibility badge.
-          </p>
-          <span className="mt-3 inline-block text-sm font-medium text-sky-700">
-            Browse providers →
-          </span>
-        </Link>
-
-        <Link
-          to="/modules"
-          className="block rounded-lg border border-slate-200 bg-white p-5 hover:border-sky-300 hover:bg-sky-50"
-        >
-          <h2 className="font-semibold text-slate-900">Modules</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Composable nivis modules: whole pieces of infrastructure as a single
-            Nix import. What each one creates is derived by evaluating it.
-          </p>
-          <span className="mt-3 inline-block text-sm font-medium text-sky-700">
-            Browse modules →
-          </span>
-        </Link>
-      </div>
-
-      <section className="mt-10 max-w-2xl">
-        <h2 className="text-lg font-semibold text-slate-800">
-          What the badge means
-        </h2>
-        <dl className="mt-3 space-y-3 text-sm">
-          <div>
-            <dt className="font-medium text-slate-900">Compatible by design</dt>
-            <dd className="text-slate-600">
-              The pipeline downloaded the provider, verified it, and read its
-              schema; its protocol version and published architectures are
-              recorded. This is the default, and it is a machine-checked claim
-              about the provider's interface. It does not mean anyone has run
-              it.
-            </dd>
-          </div>
-          <div>
-            <dt className="font-medium text-slate-900">E2E verified</dt>
-            <dd className="text-slate-600">
-              A separate, smaller, hand-maintained set: providers actually
-              driven end to end against real infrastructure. A provider is never
-              shown as verified without an explicit entry on that list.
-            </dd>
-          </div>
-        </dl>
+    <div className="-mx-6 -mt-8">
+      <section className="bg-band-bg px-6 py-14 text-band-ink">
+        <div className="mx-auto max-w-shell">
+          <h1 className="max-w-3xl text-[clamp(34px,4.4vw,54px)] font-semibold leading-[1.1]">
+            {home.title}
+          </h1>
+          <p className="mt-4 max-w-2xl text-band-muted">{home.lead}</p>
+        </div>
       </section>
+
+      <div className="mx-auto max-w-shell px-6 py-10">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <EntryCard to="/providers" title={home.providers.title} body={home.providers.body} cta={home.providers.cta} />
+          <EntryCard to="/modules" title={home.modules.title} body={home.modules.body} cta={home.modules.cta} />
+        </div>
+
+        <section className="mt-12 max-w-2xl">
+          <h2 className="text-[26px] font-semibold text-ink">{home.badge.title}</h2>
+          <dl className="mt-4 space-y-4 text-[15px]">
+            {[home.badge.byDesign, home.badge.verified].map((t) => (
+              <div key={t.term}>
+                <dt className="font-medium text-ink">{t.term}</dt>
+                <dd className="mt-0.5 text-muted">{t.body}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      </div>
     </div>
+  );
+}
+
+function EntryCard({ to, title, body, cta }: { to: string; title: string; body: string; cta: string }) {
+  return (
+    <Link
+      to={to}
+      className="block rounded-card border border-line bg-surface p-6 hover:border-accent"
+    >
+      <h2 className="text-[20px] font-semibold text-ink">{title}</h2>
+      <p className="mt-1.5 text-[15px] text-muted">{body}</p>
+      <span className="mt-4 inline-block text-[15px] font-medium text-accent">{cta} →</span>
+    </Link>
   );
 }

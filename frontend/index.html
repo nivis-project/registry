@@ -3,7 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>Nivis Registry</title>
+    <script>
+      // Applied before first paint. Doing this in a React effect guarantees a
+      // frame of the wrong theme on every load.
+      try {
+        var t = localStorage.getItem("nivis-theme");
+        if (t === "light" || t === "dark")
+          document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -65,16 +65,16 @@ describe("the root route", () => {
     stubContract();
     renderAt("/");
 
-    expect(
-      screen.getByRole("heading", { name: /nivis registry/i }),
-    ).toBeTruthy();
-    expect(document.body.textContent).toMatch(
-      /derived from the provider binary's own schema/i,
-    );
+    // One h1, and it does not claim the catalogue is complete.
+    const h1s = screen.getAllByRole("heading", { level: 1 });
+    expect(h1s).toHaveLength(1);
+    // The lead explains the model without claiming the catalogue is complete.
+    expect(document.body.textContent).toMatch(/compatible by design/i);
+    expect(document.body.textContent).not.toMatch(/every opentofu provider/i);
     expect(screen.getByRole("link", { name: /browse providers/i })).toBeTruthy();
 
     // The catalogue itself is not on the front page.
-    expect(screen.queryByText("hashicorp/random")).toBeNull();
+    expect(document.querySelector('a[href*="/providers/hashicorp"]')).toBeNull();
     // And the front page fetches nothing.
     expect(fetch).not.toHaveBeenCalled();
   });
@@ -95,9 +95,13 @@ describe("section routes", () => {
     stubContract();
     renderAt("/providers");
 
-    expect(screen.getByRole("heading", { name: /^providers$/i })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: /providers/i })).toBeTruthy();
+    // The address renders as namespace and name in separate spans, so assert
+    // the link the row offers rather than a single text node.
     await waitFor(() =>
-      expect(screen.getByText("hashicorp/random")).toBeTruthy(),
+      expect(
+        document.querySelector('a[href*="/providers/hashicorp/random/3.9.0"]'),
+      ).toBeTruthy(),
     );
   });
 

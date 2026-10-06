@@ -1,0 +1,116 @@
+/* The only place a colour is defined.
+ *
+ * Components refer to roles (surface, ink, line) rather than to colours, so a
+ * palette change happens here and nowhere else. A test under src/ fails the
+ * build if a colour literal or a default-palette utility appears anywhere else.
+ *
+ * One indigo hue (275), halfway between Nix blue and Terraform purple, plus one
+ * amber accent. --warm is a FILL, never a text colour on a light background.
+ */
+
+:root {
+  --ground: oklch(0.975 0.008 275);
+  --surface: oklch(0.995 0.003 275);
+  --ink: oklch(0.24 0.04 275);
+  --muted: oklch(0.45 0.035 275);
+  --line: oklch(0.88 0.02 275);
+
+  --accent: oklch(0.42 0.19 275);
+  --accent-soft: oklch(0.93 0.04 275);
+
+  --warm: oklch(0.8 0.14 78);
+  --on-warm: oklch(0.17 0.03 275);
+
+  --band-bg: oklch(0.235 0.09 275);
+  --band-ink: oklch(0.96 0.01 275);
+  --band-muted: oklch(0.84 0.04 275);
+  --band-line: oklch(0.46 0.08 275);
+
+  --code-bg: oklch(0.23 0.045 275);
+  --code-ink: oklch(0.93 0.015 275);
+  --code-dim: oklch(0.74 0.05 275);
+
+  --tok-keyword: oklch(0.8 0.13 320);
+  --tok-string: oklch(0.85 0.11 160);
+  --tok-func: oklch(0.83 0.1 240);
+  --tok-literal: oklch(0.85 0.12 78);
+
+  --mark-a: oklch(0.6 0.16 250);
+  --mark-b: oklch(0.55 0.2 305);
+  --mark-core: oklch(0.37 0.19 275);
+
+  --scrim: oklch(0.235 0.09 275 / 0.55);
+
+  /* Not in the mockups; see the change summary for measured contrast.
+   * --warm cannot carry text on a light background, so warning-ink is a
+   * darkened member of the same hue family rather than --warm itself. */
+  --warning-bg: oklch(0.95 0.05 78);
+  --warning-ink: oklch(0.36 0.09 78);
+  --warning-line: oklch(0.82 0.1 78);
+
+  --danger-bg: oklch(0.95 0.04 25);
+  --danger-ink: oklch(0.42 0.17 25);
+  --danger-line: oklch(0.83 0.09 25);
+}
+
+/* An explicit choice wins in both directions, so each theme is stated twice:
+ * once for the attribute and once for the system preference. */
+:root[data-theme="dark"] {
+  --ground: oklch(0.17 0.03 275);
+  --surface: oklch(0.21 0.035 275);
+  --ink: oklch(0.94 0.012 275);
+  --muted: oklch(0.76 0.035 275);
+  --line: oklch(0.34 0.04 275);
+
+  --accent: oklch(0.78 0.12 275);
+  --accent-soft: oklch(0.3 0.07 275);
+
+  --band-bg: oklch(0.23 0.08 275);
+
+  --code-bg: oklch(0.13 0.025 275);
+
+  --mark-a: oklch(0.72 0.13 250);
+  --mark-b: oklch(0.7 0.16 305);
+  --mark-core: oklch(0.82 0.1 275);
+
+  --scrim: oklch(0.12 0.03 275 / 0.6);
+
+  --warning-bg: oklch(0.29 0.06 78);
+  --warning-ink: oklch(0.89 0.1 78);
+  --warning-line: oklch(0.44 0.08 78);
+
+  --danger-bg: oklch(0.28 0.07 25);
+  --danger-ink: oklch(0.86 0.1 25);
+  --danger-line: oklch(0.45 0.11 25);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: oklch(0.17 0.03 275);
+    --surface: oklch(0.21 0.035 275);
+    --ink: oklch(0.94 0.012 275);
+    --muted: oklch(0.76 0.035 275);
+    --line: oklch(0.34 0.04 275);
+
+    --accent: oklch(0.78 0.12 275);
+    --accent-soft: oklch(0.3 0.07 275);
+
+    --band-bg: oklch(0.23 0.08 275);
+
+    --code-bg: oklch(0.13 0.025 275);
+
+    --mark-a: oklch(0.72 0.13 250);
+    --mark-b: oklch(0.7 0.16 305);
+    --mark-core: oklch(0.82 0.1 275);
+
+    --scrim: oklch(0.12 0.03 275 / 0.6);
+
+    --warning-bg: oklch(0.29 0.06 78);
+    --warning-ink: oklch(0.89 0.1 78);
+    --warning-line: oklch(0.44 0.08 78);
+
+    --danger-bg: oklch(0.28 0.07 25);
+    --danger-ink: oklch(0.86 0.1 25);
+    --danger-line: oklch(0.45 0.11 25);
+  }
+}

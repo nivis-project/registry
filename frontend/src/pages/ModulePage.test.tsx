@@ -102,12 +102,9 @@ describe("the module catalogue", () => {
     stub({});
     renderAt("/modules");
 
-    await waitFor(() =>
-      expect(screen.getByText("wearetechnative/nivis-aws-form-action")).toBeTruthy(),
+    const link = await waitFor(() =>
+      screen.getByRole("link", { name: /nivis-aws-form-action/ }),
     );
-    const link = screen.getByRole("link", {
-      name: /nivis-aws-form-action/,
-    });
     expect(link.getAttribute("href")).toContain(
       "/modules/wearetechnative/nivis-aws-form-action/0.1.0",
     );
@@ -119,9 +116,7 @@ describe("the module catalogue", () => {
 
     await waitFor(() => expect(screen.getByText(/structure not derived/i)).toBeTruthy());
     // The derived one carries no such marker.
-    const derivedRow = screen
-      .getByText("wearetechnative/nivis-aws-form-action")
-      .closest("a")!;
+    const derivedRow = screen.getByRole("link", { name: /nivis-aws-form-action/ });
     expect(within(derivedRow).queryByText(/structure not derived/i)).toBeNull();
   });
 
