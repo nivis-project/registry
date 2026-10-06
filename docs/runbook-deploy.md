@@ -66,7 +66,7 @@ Repository variables (non-secret), used by the workflow:
 | `AWS_REGION`       | `eu-central-1`                           |
 | `CONTRACT_BUCKET`  | `s3://<bucket>/<prefix>`                 |
 | `AMPLIFY_APP_ID`   | the `registry-nivis-tf` app              |
-| `AMPLIFY_BRANCH`   | `main`                                   |
+| `AMPLIFY_BRANCH`   | optional, defaults to `main`             |
 
 Amplify environment variable:
 

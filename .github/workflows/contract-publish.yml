@@ -14,7 +14,7 @@
 #   vars.AWS_REGION          eu-central-1
 #   vars.CONTRACT_BUCKET     s3://<bucket>/<prefix>
 #   vars.AMPLIFY_APP_ID      the registry-nivis-tf app
-#   vars.AMPLIFY_BRANCH      main
+#   vars.AMPLIFY_BRANCH      optional; defaults to main
 name: contract-publish
 
 on:
@@ -97,6 +97,6 @@ jobs:
         run: |
           aws amplify start-job \
             --app-id "${{ vars.AMPLIFY_APP_ID }}" \
-            --branch-name "${{ vars.AMPLIFY_BRANCH }}" \
+            --branch-name "${{ vars.AMPLIFY_BRANCH || 'main' }}" \
             --job-type RELEASE \
             --output text --query 'jobSummary.jobId'
