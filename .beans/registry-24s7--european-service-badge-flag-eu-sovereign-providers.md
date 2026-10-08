@@ -1,12 +1,12 @@
 ---
 # registry-24s7
 title: 'European-service badge: flag EU-sovereign providers in the contract + UI'
-status: todo
+status: completed
 type: task
-created_at: 2026-06-19T16:21:19Z
-updated_at: 2026-06-19T16:21:19Z
-parent: registry-vk2i
 priority: normal
+created_at: 2026-06-19T16:21:19Z
+updated_at: 2026-10-08T18:03:14Z
+parent: registry-vk2i
 ---
 
 > Scheduled: do this just before the weekend (per Pim, 2026-06-19).
@@ -65,3 +65,22 @@ like the compat e2e allowlist.
   a `scripts/scale.sh` run renders them with the marker. No seed change needed.
 - Keep this presentation-only — it does not change extraction or compat logic.
 
+
+## Summary of Changes
+
+Shipped inside OpenSpec change `catalog-enrichment` (archived
+`2026-10-08-catalog-enrichment`), commit `eb7bc670`.
+
+The badge turned out not to need a list of its own. `seed.json` already records why each
+provider is catalogued, and `europe` is exactly this bean: Scaleway, OVH, UpCloud, IONOS,
+STACKIT, cloudscale.ch, Aiven and Gandi, eight providers.
+
+- `tools/generate` now takes the seed as an input and copies `reason` into each catalogue
+  entry verbatim, rather than inventing a product-facing taxonomy on top of it.
+- `/providers` offers a filter pill per reason that means something to a reader, so
+  "European service" is one click. The pill appears only when the contract actually has
+  entries for it.
+- `publisher` (official or partner) rides along, absent where upstream reports none.
+
+Deliberately NOT named `tier`: that field already exists and holds the compat tier the SPA
+renders. A test asserts the two axes stay separate.
