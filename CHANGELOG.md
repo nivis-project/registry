@@ -44,6 +44,10 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Continuous integration passes again. It had been failing on every run since
+  2026-06-19 because it installed a package-manager version that rejects this
+  repository's configuration, and the release gate never ran the frontend
+  checks, so nothing surfaced it.
 - The pipeline scripts now catalogue modules. They generated the contract
   without ever running the module extractor, so a full run produced an empty
   module list while reporting success.

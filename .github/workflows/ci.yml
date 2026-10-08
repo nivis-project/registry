@@ -75,9 +75,16 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+      # No hardcoded version: read it from frontend/package.json, so CI, the
+      # Amplify build and the dev shell all run the same pnpm. Pinning 9 here
+      # installed a pnpm that rejects frontend/pnpm-workspace.yaml, which uses
+      # the pnpm 10+ settings form, and CI had been red since 2026-06-19.
+      #
+      # package_json_file is required: there is no package.json at the repo
+      # root, and defaults.run.working-directory applies to `run` steps only.
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          package_json_file: frontend/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

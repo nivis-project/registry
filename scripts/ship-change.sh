@@ -30,7 +30,7 @@ cd "$repo"
 step "Change: $change"
 openspec validate "$change" >/dev/null || die "openspec validate failed for $change"
 
-step "Gate 1/3: every task checked off"
+step "Gate 1/4: every task checked off"
 status="$(openspec status --change "$change" 2>&1)" || die "openspec status failed"
 tasks_file="$(printf '%s\n' "$status" | sed -n 's/^Change root: //p')/tasks.md"
 [ -f "$tasks_file" ] || die "tasks.md not found at $tasks_file"
@@ -41,10 +41,27 @@ if grep -q '^\s*- \[ \]' "$tasks_file"; then
 fi
 printf 'all tasks checked\n'
 
-step "Gate 2/3: nix flake check"
+step "Gate 2/4: nix flake check"
 nix flake check || die "nix flake check failed"
 
-step "Gate 3/3: Go test coverage"
+step "Gate 3/4: frontend tests and build"
+# The flake check builds tools/ only, so without this the entire frontend is
+# outside the gate. It was, and CI caught nothing because nobody was watching
+# it. pnpm lives in the dev shell, hence nix develop.
+if [ -d frontend ]; then
+  nix develop --command bash -c '
+    set -euo pipefail
+    cd frontend
+    pnpm install --frozen-lockfile
+    pnpm test
+    pnpm build
+  ' || die "frontend tests or build failed"
+  printf 'frontend tests and build ok\n'
+else
+  printf 'no frontend/ directory; skipped\n'
+fi
+
+step "Gate 4/4: Go test coverage"
 profile="$(mktemp)"
 trap 'rm -f "$profile"' EXIT
 ( cd tools && go test -coverprofile="$profile" ./... >/dev/null ) || die "go test failed"
