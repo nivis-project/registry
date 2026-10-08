@@ -70,6 +70,15 @@ export async function fetchCatalog(): Promise<CatalogEntry[]> {
 
 const moduleBase = "registry/docs/modules";
 
+// avatarURL resolves a contract-relative avatar reference ("avatars/ovh.png")
+// against the contract root. The contract stores it relative to itself so it
+// does not bake in where the contract is mounted; every other path goes through
+// this layer for the same reason, and an <img src> straight from the contract
+// would resolve against the DOCUMENT instead and 404.
+export function avatarURL(ref?: string): string | undefined {
+  return ref ? `registry/${ref}` : undefined;
+}
+
 function moduleIndexURL(ref: ModuleRef): string {
   return `${moduleBase}/${ref.owner}/${ref.name}/${ref.version}/index.json`;
 }

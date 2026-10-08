@@ -11,6 +11,24 @@ describe("the owner avatar", () => {
     expect(container.textContent).toBe("");
   });
 
+  // This is the assertion that was missing. The contract stores the reference
+  // relative to ITSELF ("avatars/ovh.png"); an <img src> resolves against the
+  // DOCUMENT, so handing it over unchanged asks for /avatars/ovh.png and 404s
+  // while the file sits at /registry/avatars/ovh.png. Shipped exactly that way
+  // once, because the old test only checked that an img existed.
+  it("resolves the reference against the contract root, not the document", () => {
+    render(<Avatar src="avatars/ovh.png" owner="ovh" />);
+    const img = screen.getByRole("img", { name: /ovh/i });
+    expect(img.getAttribute("src")).toBe("registry/avatars/ovh.png");
+  });
+
+  it("keeps the src relative, so the site still works under a subpath", () => {
+    render(<Avatar src="avatars/ovh.png" owner="ovh" />);
+    const src = screen.getByRole("img", { name: /ovh/i }).getAttribute("src")!;
+    expect(src.startsWith("/")).toBe(false);
+    expect(src.startsWith("http")).toBe(false);
+  });
+
   it("names the owner for a screen reader", () => {
     render(<Avatar src="avatars/ovh.png" owner="ovh" />);
     expect(screen.getByRole("img", { name: /ovh/i })).toBeTruthy();

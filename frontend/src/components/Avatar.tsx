@@ -7,6 +7,12 @@
 //
 // An avatar says who publishes a thing. It is not a quality mark, so every
 // owner gets the same footprint and the same treatment.
+//
+// `src` is the CONTRACT-RELATIVE reference ("avatars/ovh.png"). Resolving it
+// against the contract root is this component's job: handing it to <img>
+// unchanged resolves it against the document and 404s.
+import { avatarURL } from "../lib/data";
+
 export function Avatar({
   src,
   owner,
@@ -16,14 +22,15 @@ export function Avatar({
   owner: string;
   size?: number;
 }) {
-  if (!src) return null;
+  const url = avatarURL(src);
+  if (!url) return null;
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-[6px] border border-line bg-plate"
       style={{ width: size, height: size }}
     >
       <img
-        src={src}
+        src={url}
         alt={`${owner} logo`}
         width={size - 6}
         height={size - 6}

@@ -44,6 +44,8 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Owner logos now appear. They were published correctly but requested from the
+  wrong path, so every one of them silently 404'd.
 - Continuous integration passes again. It had been failing on every run since
   2026-06-19 because it installed a package-manager version that rejects this
   repository's configuration, and the release gate never ran the frontend
