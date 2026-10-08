@@ -45,8 +45,18 @@ export const home = {
   },
 } as const;
 
+// Which curation reasons are worth offering as a filter. The contract carries
+// every reason the seed recorded; that does not oblige the interface to show
+// them. "anchor", "curated" and "popular" are our bookkeeping, not a facet a
+// reader is looking for.
+export const providerFacets: { reason: string; label: string }[] = [
+  { reason: "europe", label: "European service" },
+  { reason: "utility", label: "Utility" },
+];
+
 export const providers = {
   title: "Providers",
+  allFilter: "All",
   empty: "No providers are catalogued yet.",
   filterLabel: "Filter providers",
   filterPlaceholder: "Filter by address",

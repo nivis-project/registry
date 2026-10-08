@@ -5,6 +5,7 @@ import { MarkdownDoc } from "../components/MarkdownDoc";
 import { ErrorState, SkeletonRows } from "../components/States";
 import { modulePage as copy } from "../content/site";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Avatar } from "../components/Avatar";
 import type { ModuleCoord } from "../lib/contract";
 
 // providerHref turns a resolved "<ns>/<name>/<version>" reference plus a
@@ -80,9 +81,12 @@ export function ModulePage() {
           Modules
         </Link>
       </p>
-      <h1 className="mt-1 font-mono text-[clamp(28px,3.4vw,40px)] font-medium text-ink">
-        {data.owner}/{data.name}
-      </h1>
+      <div className="mt-1 flex flex-wrap items-center gap-3">
+        <Avatar src={data.avatar} owner={data.owner} size={36} />
+        <h1 className="font-mono text-[clamp(28px,3.4vw,40px)] font-medium text-ink">
+          {data.owner}/{data.name}
+        </h1>
+      </div>
       <p className="mt-1 text-[14px] text-muted">
         {data.tag ?? data.id}
         {data.rev && <span className="text-muted"> · {data.rev.slice(0, 7)}</span>}

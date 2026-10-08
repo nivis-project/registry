@@ -17,6 +17,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 NIVIS_BIN="${NIVIS_BIN:-$(command -v nivis)}"
+SEED="${SEED:-seed.json}"
 EXTRACT_OUT="${EXTRACT_OUT:-extract-out}"
 MODULE_OUT="${MODULE_OUT:-module-out}"
 MODULE_PINS="${MODULE_PINS:-module-pins.json}"
@@ -37,7 +38,9 @@ echo "==> 2/4 modules: catalogue every module in $MODULE_PINS (nix eval, cfg poi
 
 echo "==> 3/4 generate: emit the registry-ui contract + Nix-rendered docs"
 ( cd tools && go run ./cmd/generate \
-    -extract "../$EXTRACT_OUT" -modules "../$MODULE_OUT" -contract "../$CONTRACT_DIR" )
+    -extract "../$EXTRACT_OUT" -modules "../$MODULE_OUT" \
+    -seed "../$SEED" -module-pins "../$MODULE_PINS" \
+    -contract "../$CONTRACT_DIR" )
 
 echo "==> 4/4 build the static site"
 ( cd frontend && pnpm install --frozen-lockfile && pnpm build )

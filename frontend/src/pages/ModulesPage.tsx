@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { fetchModuleCatalog } from "../lib/data";
 import { modules as copy } from "../content/site";
 import { EmptyState, ErrorState, SkeletonRows } from "../components/States";
+import { Avatar } from "../components/Avatar";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 // A module's structure is derived by evaluating it, so an entry that could NOT
@@ -37,9 +38,12 @@ export function ModulesPage() {
                   className="block px-4 py-4 hover:bg-accent-soft"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="font-mono text-[15px]">
-                      <span className="text-muted">{m.owner}/</span>
-                      <span className="text-accent">{m.name}</span>
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <Avatar src={m.avatar} owner={m.owner} size={28} />
+                      <span className="font-mono text-[15px]">
+                        <span className="text-muted">{m.owner}/</span>
+                        <span className="text-accent">{m.name}</span>
+                      </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-3">
                       {!m.derived && (

@@ -37,6 +37,7 @@ export interface ProviderVersion {
   published?: string;
   docs: ProviderDocs;
   compat: CompatRecord;
+  avatar?: string;
 }
 
 // ProviderRef identifies a provider version within the contract tree.
@@ -94,6 +95,7 @@ export interface ModuleVersion {
   composition?: string[];
   cfg: ModuleCfgKey[];
   record: ModuleRecord;
+  avatar?: string;
   readme?: string;
 }
 
@@ -103,6 +105,9 @@ export interface ModuleCatalogEntry {
   version: string;
   description?: string;
   derived: boolean;
+  // Contract-relative reference to the owner's brand avatar. Absent when none
+  // could be obtained, so a consumer never renders a broken image.
+  avatar?: string;
 }
 
 // ModuleRef identifies a module version within the contract tree.

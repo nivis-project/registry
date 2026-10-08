@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchCatalog } from "../lib/data";
-import { providers as copy } from "../content/site";
+import { providers as copy, providerFacets } from "../content/site";
+import { Avatar } from "../components/Avatar";
 import { EmptyState, ErrorState, SkeletonRows } from "../components/States";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
@@ -17,14 +18,24 @@ export function ProvidersPage() {
     queryFn: fetchCatalog,
   });
   const [filter, setFilter] = useState("");
+  const [facet, setFacet] = useState<string | null>(null);
   useDocumentTitle(copy.title);
+
+  // Offer a pill only when the contract actually has entries for it.
+  const facets = useMemo(
+    () => providerFacets.filter((f) => data?.some((p) => p.reason === f.reason)),
+    [data],
+  );
 
   const shown = useMemo(() => {
     if (!data) return [];
     const q = filter.trim().toLowerCase();
-    if (!q) return data;
-    return data.filter((p) => `${p.namespace}/${p.name}`.toLowerCase().includes(q));
-  }, [data, filter]);
+    return data.filter((p) => {
+      if (facet && p.reason !== facet) return false;
+      if (q && !`${p.namespace}/${p.name}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [data, filter, facet]);
 
   return (
     <div>
@@ -49,6 +60,27 @@ export function ProvidersPage() {
 
       <p className="mt-2 max-w-2xl text-[15px] text-muted">{copy.generatedNote}</p>
 
+      {facets.length > 0 && (
+        <div role="group" aria-label={copy.filterLabel} className="mt-4 flex flex-wrap gap-2">
+          {[{ reason: null, label: copy.allFilter }, ...facets].map((f) => (
+            <button
+              key={f.label}
+              type="button"
+              aria-pressed={facet === f.reason}
+              onClick={() => setFacet(f.reason)}
+              className={[
+                "inline-flex h-11 items-center rounded-full border px-4 text-[14px]",
+                facet === f.reason
+                  ? "border-accent bg-accent-soft font-medium text-ink"
+                  : "border-line bg-surface text-muted hover:text-ink",
+              ].join(" ")}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="mt-6">
         {isLoading && <SkeletonRows rows={8} />}
         {error && <ErrorState what="registry/catalog.json" error={error} onRetry={() => refetch()} />}
@@ -63,14 +95,22 @@ export function ProvidersPage() {
                   to={`/providers/${p.namespace}/${p.name}/${p.version}`}
                   className="flex h-full flex-col justify-between rounded-card border border-line bg-surface p-4 hover:border-accent"
                 >
-                  <span className="font-mono text-[15px]">
-                    <span className="text-muted">{p.namespace}/</span>
-                    <span className="text-ink">{p.name}</span>
+                  <span className="flex items-center gap-2.5">
+                    <Avatar src={p.avatar} owner={p.namespace} size={28} />
+                    <span className="min-w-0 font-mono text-[15px]">
+                      <span className="text-muted">{p.namespace}/</span>
+                      <span className="text-ink">{p.name}</span>
+                    </span>
                   </span>
                   <span className="mt-3 flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[13px] text-ink">
                       {p.tier}
                     </span>
+                    {p.publisher && (
+                      <span className="rounded-full border border-line px-2.5 py-0.5 text-[13px] text-muted">
+                        {p.publisher}
+                      </span>
+                    )}
                     <span className="font-mono text-[13px] text-muted">{p.version}</span>
                   </span>
                 </Link>

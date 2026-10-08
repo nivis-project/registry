@@ -37,7 +37,9 @@ echo "==> 2/4 modules: catalogue every module in $MODULE_PINS (nix eval, cfg poi
 
 echo "==> 3/4 generate: emit the full registry-ui contract + Nix-rendered docs"
 ( cd tools && go run ./cmd/generate \
-    -extract "../$EXTRACT_OUT" -modules "../$MODULE_OUT" -contract "../$CONTRACT_DIR" )
+    -extract "../$EXTRACT_OUT" -modules "../$MODULE_OUT" \
+    -seed "../$SEED" -module-pins "../$MODULE_PINS" \
+    -contract "../$CONTRACT_DIR" )
 
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   echo "==> 4/4 build the static site"

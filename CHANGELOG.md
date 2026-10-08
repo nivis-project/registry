@@ -15,6 +15,11 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Provider and module listings show the publisher's logo, so a catalogue of 59
+  entries is scannable instead of a wall of addresses. Logos are fetched when
+  the contract is built and served from this site, never from a third party.
+- Providers can be filtered by why they are catalogued, including a European
+  service filter, and show their upstream publisher standing where there is one.
 - Pages now have a state for loading, for a failed fetch with a retry, for an
   empty catalogue or filter, and for an unknown address.
 - Modules are browsable. `/modules` lists them and each has a page showing what

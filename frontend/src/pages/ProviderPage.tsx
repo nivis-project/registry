@@ -8,6 +8,7 @@ import { ErrorState, SkeletonRows } from "../components/States";
 import { providerPage as copy } from "../content/site";
 import type { DocItem } from "../lib/contract";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { Avatar } from "../components/Avatar";
 
 type TabKey = "resources" | "datasources" | "functions";
 
@@ -61,6 +62,7 @@ export function ProviderPage() {
       </nav>
 
       <div className="mt-2 flex flex-wrap items-center gap-3">
+        <Avatar src={data.avatar} owner={namespace} size={36} />
         <h1 className="font-mono text-[clamp(28px,3.4vw,40px)] font-medium text-ink">
           {namespace}/{name}
         </h1>

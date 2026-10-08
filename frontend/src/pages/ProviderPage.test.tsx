@@ -144,3 +144,75 @@ describe("the provider catalogue", () => {
     await waitFor(() => expect(screen.getByText(/no providers are catalogued/i)).toBeTruthy());
   });
 });
+
+describe("owner avatars", () => {
+  const entry = (over: Record<string, unknown> = {}) => ({
+    namespace: "ovh",
+    name: "ovh",
+    version: "1.0.0",
+    tier: "compatible by design",
+    ...over,
+  });
+
+  function renderCatalogue() {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter initialEntries={["/providers"]}>
+          <ProvidersPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+  }
+
+  it("shows the avatar on a card when the contract has one", async () => {
+    stub([entry({ avatar: "avatars/ovh.png" })]);
+    renderCatalogue();
+    await waitFor(() => expect(screen.getByRole("img", { name: /ovh logo/i })).toBeTruthy());
+  });
+
+  it("renders a card without one when the contract omits it", async () => {
+    stub([entry()]);
+    renderCatalogue();
+    await waitFor(() => expect(screen.getByText("ovh")).toBeTruthy());
+    expect(screen.queryByRole("img")).toBeNull();
+  });
+
+  it("shows the publisher chip only when upstream reported one", async () => {
+    stub([entry({ publisher: "partner" }), entry({ name: "other" })]);
+    renderCatalogue();
+    await waitFor(() => expect(screen.getByText("partner")).toBeTruthy());
+    // Two cards, one chip.
+    expect(screen.getAllByText("partner")).toHaveLength(1);
+  });
+
+  it("offers a filter pill only for a reason the contract actually has", async () => {
+    stub([entry({ reason: "europe" }), entry({ name: "other", reason: "popular" })]);
+    renderCatalogue();
+
+    await waitFor(() => expect(screen.getByRole("button", { name: /european service/i })).toBeTruthy());
+    // "popular" is our bookkeeping, not a facet a reader wants.
+    expect(screen.queryByRole("button", { name: /popular/i })).toBeNull();
+    // "utility" is offered in principle, but nothing here carries it.
+    expect(screen.queryByRole("button", { name: /^utility$/i })).toBeNull();
+  });
+
+  it("filters by the selected facet", async () => {
+    stub([entry({ reason: "europe" }), entry({ name: "elsewhere", reason: "popular" })]);
+    renderCatalogue();
+
+    await waitFor(() => expect(screen.getByText("elsewhere")).toBeTruthy());
+    fireEvent.click(screen.getByRole("button", { name: /european service/i }));
+    expect(screen.queryByText("elsewhere")).toBeNull();
+    expect(screen.getByText("ovh")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /^all$/i }));
+    expect(screen.getByText("elsewhere")).toBeTruthy();
+  });
+
+  it("shows the avatar beside the title on a detail page", async () => {
+    stub(index({ avatar: "avatars/hashicorp.png" }));
+    renderProvider();
+    await waitFor(() => expect(screen.getByRole("img", { name: /hashicorp logo/i })).toBeTruthy());
+  });
+});

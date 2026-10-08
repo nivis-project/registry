@@ -241,3 +241,43 @@ func TestGenerateModulesSkipsUnreadableEntries(t *testing.T) {
 		t.Error("the skip should be logged")
 	}
 }
+
+// --- enrichment -------------------------------------------------------------
+
+func TestModuleCatalogueCarriesTheOwnerAvatar(t *testing.T) {
+	moduleRoot, contractRoot := t.TempDir(), t.TempDir()
+	writeModuleOut(t, moduleRoot, sampleModule())
+
+	enr := Enrichment{Avatars: map[string]string{"acme": "avatars/acme.png"}}
+	if _, err := GenerateModulesEnriched(moduleRoot, contractRoot, enr, nil); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(contractRoot, "registry", "modules.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var catalog []ModuleCatalogEntry
+	if err := json.Unmarshal(b, &catalog); err != nil {
+		t.Fatal(err)
+	}
+	if catalog[0].Avatar != "avatars/acme.png" {
+		t.Errorf("avatar = %q, want the owner's reference", catalog[0].Avatar)
+	}
+}
+
+func TestModuleCatalogueOmitsAnAbsentAvatar(t *testing.T) {
+	moduleRoot, contractRoot := t.TempDir(), t.TempDir()
+	writeModuleOut(t, moduleRoot, sampleModule())
+
+	if _, err := GenerateModules(moduleRoot, contractRoot, nil); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(contractRoot, "registry", "modules.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Absent, not empty: a consumer must not be able to render a broken image.
+	if strings.Contains(string(b), "avatar") {
+		t.Errorf("modules.json should carry no avatar key when none was obtained:\n%s", b)
+	}
+}

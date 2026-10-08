@@ -49,7 +49,15 @@ export async function fetchItemDoc(
 // page can link them without a live search backend (v1). It is generated
 // alongside the contract.
 export interface CatalogEntry extends ProviderRef {
+  // tier is the COMPAT tier ("compatible by design"), not the publisher's
+  // standing upstream. The two are different axes with similar vocabulary.
   tier: string;
+  avatar?: string;
+  // Why this provider is catalogued, verbatim from the seed: anchor, utility,
+  // europe, curated or popular.
+  reason?: string;
+  // Upstream standing (official, partner). Absent when upstream reports none.
+  publisher?: string;
 }
 
 export async function fetchCatalog(): Promise<CatalogEntry[]> {

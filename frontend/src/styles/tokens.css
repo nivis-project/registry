@@ -41,6 +41,10 @@
 
   --scrim: oklch(0.235 0.09 275 / 0.55);
 
+  /* Backing for brand avatars. Light in BOTH themes on purpose: many marks are
+   * dark ink on transparency and vanish on a dark page. */
+  --plate: oklch(0.99 0.004 275);
+
   /* Not in the mockups; see the change summary for measured contrast.
    * --warm cannot carry text on a light background, so warning-ink is a
    * darkened member of the same hue family rather than --warm itself. */
@@ -75,6 +79,8 @@
 
   --scrim: oklch(0.12 0.03 275 / 0.6);
 
+  --plate: oklch(0.95 0.006 275);
+
   --warning-bg: oklch(0.29 0.06 78);
   --warning-ink: oklch(0.89 0.1 78);
   --warning-line: oklch(0.44 0.08 78);
@@ -104,6 +110,8 @@
     --mark-core: oklch(0.82 0.1 275);
 
     --scrim: oklch(0.12 0.03 275 / 0.6);
+
+    --plate: oklch(0.95 0.006 275);
 
     --warning-bg: oklch(0.29 0.06 78);
     --warning-ink: oklch(0.89 0.1 78);

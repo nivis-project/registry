@@ -33,7 +33,10 @@ type ModuleVersion struct {
 	Composition []string        `json:"composition,omitempty"`
 	Cfg         []module.CfgKey `json:"cfg"`
 	Record      module.Record   `json:"record"`
-	Readme      string          `json:"readme,omitempty"`
+	// Avatar is the owner's brand avatar, repeated here so a detail page need
+	// not fetch the catalogue to show who publishes this.
+	Avatar string `json:"avatar,omitempty"`
+	Readme string `json:"readme,omitempty"`
 }
 
 // ModuleCatalogEntry is one row of registry/modules.json.
@@ -43,11 +46,19 @@ type ModuleCatalogEntry struct {
 	Version     string `json:"version"`
 	Description string `json:"description,omitempty"`
 	Derived     bool   `json:"derived"`
+	// Avatar is the owner's brand avatar, the same file a provider from the
+	// same owner references. Absent when none could be obtained.
+	Avatar string `json:"avatar,omitempty"`
 }
 
 // GenerateModule emits one module's contract from its extraction output
 // directory, returning the index path.
 func GenerateModule(moduleDir, contractRoot string) (string, error) {
+	return GenerateModuleEnriched(moduleDir, contractRoot, Enrichment{})
+}
+
+// GenerateModuleEnriched is GenerateModule with the owner's avatar.
+func GenerateModuleEnriched(moduleDir, contractRoot string, enr Enrichment) (string, error) {
 	b, err := os.ReadFile(filepath.Join(moduleDir, "module.json"))
 	if err != nil {
 		return "", fmt.Errorf("read module.json in %s: %w", moduleDir, err)
@@ -73,6 +84,7 @@ func GenerateModule(moduleDir, contractRoot string) (string, error) {
 		Composition: m.Composition,
 		Cfg:         cfgOrEmpty(m.Cfg),
 		Record:      m.Record,
+		Avatar:      enr.avatar(m.Owner),
 		Readme:      m.Readme,
 	}
 
@@ -92,6 +104,11 @@ func GenerateModule(moduleDir, contractRoot string) (string, error) {
 // contract plus registry/modules.json. A skipped module has no structure to
 // publish and is left out of the contract.
 func GenerateModules(moduleRoot, contractRoot string, log func(string, ...interface{})) ([]string, error) {
+	return GenerateModulesEnriched(moduleRoot, contractRoot, Enrichment{}, log)
+}
+
+// GenerateModulesEnriched is GenerateModules with the owner avatars.
+func GenerateModulesEnriched(moduleRoot, contractRoot string, enr Enrichment, log func(string, ...interface{})) ([]string, error) {
 	if log == nil {
 		log = func(string, ...interface{}) {}
 	}
@@ -109,7 +126,7 @@ func GenerateModules(moduleRoot, contractRoot string, log func(string, ...interf
 	var paths []string
 	var catalog []ModuleCatalogEntry
 	for _, dir := range dirs {
-		path, err := GenerateModule(dir, contractRoot)
+		path, err := GenerateModuleEnriched(dir, contractRoot, enr)
 		if err != nil {
 			log("skip %s: %v", dir, err)
 			continue
@@ -128,6 +145,7 @@ func GenerateModules(moduleRoot, contractRoot string, log func(string, ...interf
 			Version:     m.Version,
 			Description: m.Description,
 			Derived:     m.Record.StructureExtractable,
+			Avatar:      enr.avatar(m.Owner),
 		})
 		paths = append(paths, path)
 		log("ok   %s/%s @ %s", m.Owner, m.Name, m.Version)

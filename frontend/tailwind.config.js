@@ -32,6 +32,7 @@ export default {
         "mark-b": "var(--mark-b)",
         "mark-core": "var(--mark-core)",
         scrim: "var(--scrim)",
+        plate: "var(--plate)",
         "warning-bg": "var(--warning-bg)",
         "warning-ink": "var(--warning-ink)",
         "warning-line": "var(--warning-line)",

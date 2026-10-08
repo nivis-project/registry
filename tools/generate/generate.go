@@ -56,11 +56,14 @@ type Docs struct {
 // `compat` record. The frontend keeps the registry-ui fields; `compat` is the
 // only addition (the resource-page rendering is adapted, not the contract types).
 type ProviderVersion struct {
-	ID        string         `json:"id"` // version number
-	Published string         `json:"published,omitempty"`
-	Docs      Docs           `json:"docs"`
-	Compat    compat.Record  `json:"compat"`
-	Nivis     map[string]any `json:"nivis,omitempty"` // reserved for future Nivis metadata
+	ID        string        `json:"id"` // version number
+	Published string        `json:"published,omitempty"`
+	Docs      Docs          `json:"docs"`
+	Compat    compat.Record `json:"compat"`
+	// Avatar is the owner's brand avatar, repeated here so a detail page need
+	// not fetch the whole catalogue to show who publishes this.
+	Avatar string         `json:"avatar,omitempty"`
+	Nivis  map[string]any `json:"nivis,omitempty"` // reserved for future Nivis metadata
 }
 
 // itemDocFileName is the per-item document filename for an item (Nix-rendered).
@@ -74,6 +77,11 @@ func itemDocFileName(itemName string) string { return itemName + ".md" }
 // It returns the emitted index.json path. A provider with no .nix files yields
 // an index with empty lists (still valid) rather than an error.
 func GenerateProvider(extractDir, contractRoot string) (string, error) {
+	return GenerateProviderEnriched(extractDir, contractRoot, Enrichment{})
+}
+
+// GenerateProviderEnriched is GenerateProvider with the owner's avatar.
+func GenerateProviderEnriched(extractDir, contractRoot string, enr Enrichment) (string, error) {
 	meta, err := readMetadata(extractDir)
 	if err != nil {
 		return "", err
@@ -131,6 +139,7 @@ func GenerateProvider(extractDir, contractRoot string) (string, error) {
 			Guides:      []DocItem{},
 		},
 		Compat: compat.Compute(meta, true),
+		Avatar: enr.avatar(meta.Namespace),
 	}
 
 	indexPath := filepath.Join(outDir, "index.json")
@@ -150,14 +159,54 @@ type CatalogEntry struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 	Version   string `json:"version"`
-	Tier      string `json:"tier"`
+	// Tier is the COMPAT tier ("compatible by design"). Its name predates the
+	// publisher field below and is left alone: the SPA already renders it, and
+	// reusing the name for upstream standing would silently change what a
+	// consumer reads.
+	Tier string `json:"tier"`
+	// Avatar is the contract-relative reference to the owner's brand avatar,
+	// absent when none could be obtained.
+	Avatar string `json:"avatar,omitempty"`
+	// Reason is why this provider is catalogued, verbatim from the seed:
+	// anchor, utility, europe, curated or popular.
+	Reason string `json:"reason,omitempty"`
+	// Publisher is the upstream standing (official, partner), absent when
+	// upstream reports none. A different axis from Tier despite the similar
+	// vocabulary.
+	Publisher string `json:"publisher,omitempty"`
 }
+
+// ProviderFacts are the per-provider facts the seed knows and the extraction
+// output does not.
+type ProviderFacts struct {
+	Reason    string
+	Publisher string
+}
+
+// Enrichment is what the caller has gathered from outside the extraction tree:
+// the seed's view of each provider, and an avatar per owner. Both are optional,
+// so generation still works with neither, and the package itself stays free of
+// network access.
+type Enrichment struct {
+	Providers map[string]ProviderFacts // keyed by "<namespace>/<name>"
+	Avatars   map[string]string        // keyed by owner
+}
+
+func (e Enrichment) facts(address string) ProviderFacts { return e.Providers[address] }
+func (e Enrichment) avatar(owner string) string         { return e.Avatars[owner] }
 
 // GenerateAll walks every provider-version directory under extractRoot
 // (extractRoot/<ns>/<name>/<version>/), generates each, and writes the browsable
 // catalog.json. It is resilient: a provider that fails generation is logged via
 // log (if non-nil) and skipped.
 func GenerateAll(extractRoot, contractRoot string, log func(string, ...interface{})) ([]string, error) {
+	return GenerateAllEnriched(extractRoot, contractRoot, Enrichment{}, log)
+}
+
+// GenerateAllEnriched is GenerateAll with the facts the extraction tree does
+// not carry: why each provider is catalogued, its upstream standing, and its
+// owner's avatar.
+func GenerateAllEnriched(extractRoot, contractRoot string, enr Enrichment, log func(string, ...interface{})) ([]string, error) {
 	if log == nil {
 		log = func(string, ...interface{}) {}
 	}
@@ -168,7 +217,7 @@ func GenerateAll(extractRoot, contractRoot string, log func(string, ...interface
 	var out []string
 	var catalog []CatalogEntry
 	for _, vd := range versionDirs {
-		idx, gerr := GenerateProvider(vd, contractRoot)
+		idx, gerr := GenerateProviderEnriched(vd, contractRoot, enr)
 		if gerr != nil {
 			log("skip %s: %v", vd, gerr)
 			continue
@@ -177,8 +226,15 @@ func GenerateAll(extractRoot, contractRoot string, log func(string, ...interface
 		out = append(out, idx)
 		if meta, merr := readMetadata(vd); merr == nil {
 			rec := compat.Compute(meta, true)
+			f := enr.facts(meta.Address)
 			catalog = append(catalog, CatalogEntry{
-				Namespace: meta.Namespace, Name: meta.Name, Version: meta.Version, Tier: string(rec.Tier),
+				Namespace: meta.Namespace,
+				Name:      meta.Name,
+				Version:   meta.Version,
+				Tier:      string(rec.Tier),
+				Avatar:    enr.avatar(meta.Namespace),
+				Reason:    f.Reason,
+				Publisher: f.Publisher,
 			})
 		}
 	}
