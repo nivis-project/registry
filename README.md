@@ -1,7 +1,25 @@
-# Nivis Registry
+<p align="center">
+  <a href="https://nivis.tf"><img src="https://nivis.tf/favicon.svg" alt="Nivis" width="72"></a>
+</p>
+
+<h1 align="center">registry</h1>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/status-alpha-2d8dd2" alt="Status: alpha">
+</p>
+
+<p align="center">
+  Browsable catalog of OpenTofu-compatible providers, modules and blueprints with Nix-native docs.
+</p>
+
+<p align="center">
+  <a href="https://nivis.tf">nivis.tf</a> ·
+  <a href="https://github.com/nivis-project/nivis">nivis</a> ·
+  <a href="https://docs.nivis.tf/">Docs</a>
+</p>
 
 A public, browsable catalog of OpenTofu-compatible providers with **Nix-native** documentation,
-for the [Nivis](https://wearetechnative.github.io/nivis/) project.
+for the [Nivis](https://nivis.tf) project.
 
 Every OpenTofu provider is Nivis-compatible *by design* — Nivis runs unmodified provider binaries over
 the plugin protocol. This registry makes them discoverable and publishes **schema-derived Nix
@@ -37,3 +55,7 @@ openspec list                     # the changes
 
 Project code: Apache-2.0 (matching nivis). The vendored `frontend/` retains its upstream license
 (recorded when vendored).
+
+---
+
+<p align="center"><sub>Part of the <a href="https://nivis.tf">Nivis</a> project: Terraform providers as first-class Nix values. Main repository: <a href="https://github.com/nivis-project/nivis">nivis-project/nivis</a>.</sub></p>

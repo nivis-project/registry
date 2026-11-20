@@ -114,6 +114,11 @@
             doCheck = true;
           };
 
+          readme-header = pkgs.runCommand "readme-header" { } ''
+            bash ${./scripts/check-readme-header.sh} ${./README.md} registry "alpha"
+            touch $out
+          '';
+
           # Fail the check if any tracked Go file is not gofmt-clean.
           gofmt = pkgs.runCommand "gofmt-check" { nativeBuildInputs = [ pkgs.go ]; } ''
             cd ${./tools}
