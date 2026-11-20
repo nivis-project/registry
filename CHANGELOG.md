@@ -9,6 +9,13 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Every page of the registry is served as HTML with its content, so search
+  engines and link previews see it: pages have their own address
+  (`/providers/hashicorp/aws/...` instead of `/#/providers/...`), title,
+  description, preview image and canonical URL, and the site publishes
+  `sitemap.xml` and `robots.txt`. Old `#/` links still arrive. The header links
+  back to nivis.tf, the docs and the GitHub repository, as nivis.tf does.
+
 - The registry has the Nivis visual identity: one indigo hue, self-hosted type,
   a generated mark in place of the emoji, and light and dark themes that follow
   your system by default and remember an override.
@@ -44,6 +51,8 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- A provider whose contract has no resources (`hashicorp/http`) no longer fails
+  to render.
 - Owner logos now appear. They were published correctly but requested from the
   wrong path, so every one of them silently 404'd.
 - Continuous integration passes again. It had been failing on every run since

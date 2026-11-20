@@ -7,7 +7,7 @@ import react from "@vitejs/plugin-react";
 // built assets (S3 + CloudFront later). No live backend is required.
 export default defineConfig({
   plugins: [react()],
-  base: "./",
+  base: "/",
   test: {
     environment: "jsdom",
     globals: true,

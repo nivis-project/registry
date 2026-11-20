@@ -208,15 +208,22 @@ model, with the resource-page rendering adapted to Nix. It is a clean-room
 implementation on the registry-ui pattern (it does not copy upstream source). See
 `frontend/README.md` for the license provenance.
 
-Stack: Vite + React 19 + react-router (`HashRouter`, so it works as plain static
-files) + TanStack Query + Tailwind, built with pnpm.
+Stack: Vite + React 19 + react-router (`BrowserRouter`, with every route
+prerendered to its own `index.html` at build time, so it works as plain static
+files and a crawler sees the content) + TanStack Query + Tailwind, built with
+pnpm.
 
 Source map:
 
 | File | Role |
 |------|------|
 | `src/lib/contract.ts` | the contract TS types (mirror registry-ui + `compat`) |
-| `src/lib/data.ts` | the data layer — fetches `registry/docs/...` + `catalog.json` |
+| `src/lib/data.ts` | the data layer — fetches `/registry/docs/...` + `catalog.json` |
+| `src/lib/queries.ts` | the routes and the queries each route reads, shared by the browser and the prerender |
+| `src/lib/head.ts` | each page's title, description, canonical URL and Open Graph tags |
+| `src/entry-server.tsx` | renders one route to HTML for the prerender |
+| `scripts/prerender.mjs` | writes every route's `index.html`, `sitemap.xml`, `robots.txt`, `404.html` |
+| `scripts/check-prerender.mjs` | fails the build if a page, its head or the sitemap is missing or wrong |
 | `src/lib/markdown.ts` | a tiny dependency-free Markdown block parser |
 | `src/pages/IndexPage.tsx` | provider list (from `catalog.json`) |
 | `src/pages/ProviderPage.tsx` | a provider's resources + the compat badge |

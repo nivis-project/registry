@@ -16,7 +16,7 @@ contract types, and routing model follow registry-ui. The contract type definiti
 
 ## Stack
 
-React 19 + Vite + react-router (HashRouter, for static hosting) + TanStack Query + Tailwind, built
+React 19 + Vite + react-router (path routes, each prerendered to static HTML) + TanStack Query + Tailwind, built
 with pnpm — all available in the repo's `nix develop` shell.
 
 ## What is kept vs adapted

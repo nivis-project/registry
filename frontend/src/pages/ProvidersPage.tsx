@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { fetchCatalog } from "../lib/data";
+import { catalogQuery } from "../lib/queries";
 import { providers as copy, providerFacets } from "../content/site";
 import { Avatar } from "../components/Avatar";
 import { EmptyState, ErrorState, SkeletonRows } from "../components/States";
@@ -13,10 +13,7 @@ import { useDocumentTitle } from "../lib/useDocumentTitle";
 // catalog-enrichment adds the fields; until then the element is absent rather
 // than fabricated.
 export function ProvidersPage() {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["catalog"],
-    queryFn: fetchCatalog,
-  });
+  const { data, isLoading, error, refetch } = useQuery(catalogQuery());
   const [filter, setFilter] = useState("");
   const [facet, setFacet] = useState<string | null>(null);
   useDocumentTitle(copy.title);

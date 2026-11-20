@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { fetchProviderVersion } from "../lib/data";
+import { providerQuery } from "../lib/queries";
 import { CompatBadge } from "../components/CompatBadge";
 import { CodeBlock } from "../components/CodeBlock";
 import { ErrorState, SkeletonRows } from "../components/States";
@@ -15,10 +15,7 @@ type TabKey = "resources" | "datasources" | "functions";
 export function ProviderPage() {
   const { namespace = "", name = "", version = "" } = useParams();
   const ref = { namespace, name, version };
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["provider", namespace, name, version],
-    queryFn: () => fetchProviderVersion(ref),
-  });
+  const { data, isLoading, error, refetch } = useQuery(providerQuery(ref));
   const [tab, setTab] = useState<TabKey | null>(null);
   const [filter, setFilter] = useState("");
   useDocumentTitle(`${namespace}/${name}`);
@@ -27,9 +24,9 @@ export function ProviderPage() {
     if (!data) return [] as { key: TabKey; label: string; items: DocItem[] }[];
     return (
       [
-        { key: "resources" as const, label: copy.tabs.resources, items: data.docs.resources },
-        { key: "datasources" as const, label: copy.tabs.datasources, items: data.docs.datasources },
-        { key: "functions" as const, label: copy.tabs.functions, items: data.docs.functions },
+        { key: "resources" as const, label: copy.tabs.resources, items: data.docs.resources ?? [] },
+        { key: "datasources" as const, label: copy.tabs.datasources, items: data.docs.datasources ?? [] },
+        { key: "functions" as const, label: copy.tabs.functions, items: data.docs.functions ?? [] },
       ] satisfies { key: TabKey; label: string; items: DocItem[] }[]
     ).filter((t) => t.items.length > 0);
   }, [data]);

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { fetchModuleVersion } from "../lib/data";
+import { moduleQuery } from "../lib/queries";
 import { MarkdownDoc } from "../components/MarkdownDoc";
 import { ErrorState, SkeletonRows } from "../components/States";
 import { modulePage as copy } from "../content/site";
@@ -55,10 +55,7 @@ export function ModulePage() {
   const { owner = "", name = "", version = "" } = useParams();
   const ref = { owner, name, version };
   useDocumentTitle(`${owner}/${name}`);
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["module", owner, name, version],
-    queryFn: () => fetchModuleVersion(ref),
-  });
+  const { data, isLoading, error, refetch } = useQuery(moduleQuery(ref));
 
   if (isLoading) return <SkeletonRows rows={6} />;
   if (error || !data)

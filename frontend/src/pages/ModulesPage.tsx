@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { fetchModuleCatalog } from "../lib/data";
+import { moduleCatalogQuery } from "../lib/queries";
 import { modules as copy } from "../content/site";
 import { EmptyState, ErrorState, SkeletonRows } from "../components/States";
 import { Avatar } from "../components/Avatar";
@@ -11,10 +11,7 @@ import { useDocumentTitle } from "../lib/useDocumentTitle";
 // machine-checked.
 export function ModulesPage() {
   useDocumentTitle(copy.title);
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["module-catalog"],
-    queryFn: fetchModuleCatalog,
-  });
+  const { data, isLoading, error, refetch } = useQuery(moduleCatalogQuery());
 
   return (
     <div>

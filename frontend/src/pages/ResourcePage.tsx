@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { fetchItemDoc, fetchProviderVersion } from "../lib/data";
+import { docQuery, providerQuery } from "../lib/queries";
 import { MarkdownDoc } from "../components/MarkdownDoc";
 import { CompatBadge } from "../components/CompatBadge";
 import { ErrorState, SkeletonRows } from "../components/States";
@@ -15,21 +15,16 @@ export function ResourcePage() {
   const { namespace = "", name = "", version = "", item = "" } = useParams();
   const ref = { namespace, name, version };
   const [filter, setFilter] = useState("");
+  const inBrowser = typeof window !== "undefined";
   useDocumentTitle(item);
 
-  const doc = useQuery({
-    queryKey: ["doc", namespace, name, version, item],
-    queryFn: () => fetchItemDoc(ref, item),
-  });
-  const provider = useQuery({
-    queryKey: ["provider", namespace, name, version],
-    queryFn: () => fetchProviderVersion(ref),
-  });
+  const doc = useQuery(docQuery(ref, item));
+  const provider = useQuery(providerQuery(ref));
 
   const siblings = useMemo(() => {
     const d = provider.data;
     if (!d) return [];
-    const all = [...d.docs.resources, ...d.docs.datasources, ...d.docs.functions];
+    const all = [...(d.docs.resources ?? []), ...(d.docs.datasources ?? []), ...(d.docs.functions ?? [])];
     const q = filter.trim().toLowerCase();
     return q ? all.filter((i) => i.title.toLowerCase().includes(q)) : all;
   }, [provider.data, filter]);
@@ -55,7 +50,7 @@ export function ResourcePage() {
           />
         </label>
 
-        {provider.data && (
+        {provider.data && inBrowser && (
           <ul className="mt-3 max-h-[60vh] overflow-y-auto rounded-card border border-line bg-surface">
             {siblings.map((s) => (
               <li key={s.name}>

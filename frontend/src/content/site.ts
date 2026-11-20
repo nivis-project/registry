@@ -14,6 +14,32 @@ export const site = {
   homeUrl: "https://nivis.tf",
   repoUrl: "https://github.com/nivis-project/registry",
   footer: "Apache-2.0 · provider data from the OpenTofu registry",
+  origin: "https://registry.nivis.tf",
+  socialImage: "https://registry.nivis.tf/social.png",
+  links: {
+    home: { label: "Home", href: "https://nivis.tf" },
+    docs: { label: "Docs", href: "https://docs.nivis.tf/" },
+    star: { label: "Star on GitHub", href: "https://github.com/nivis-project/nivis" },
+  },
+  footerLinks: [
+    { label: "GitHub", href: "https://github.com/nivis-project/nivis" },
+    { label: "Issues", href: "https://github.com/nivis-project/nivis/issues" },
+    { label: "Discussions", href: "https://github.com/nivis-project/nivis/discussions" },
+    { label: "Demos", href: "https://github.com/nivis-project/nivis-demos" },
+  ],
+} as const;
+
+export const meta = {
+  providers: (count: number) =>
+    `${count} OpenTofu providers, each resource documented as the typed Nix constructor you write with Nivis.`,
+  provider: (address: string, version: string, count: number) =>
+    `${address} ${version} for Nivis: ${count} resources documented as typed Nix constructors, generated from the provider's own schema.`,
+  resource: (item: string, address: string, version: string) =>
+    `${item} from ${address} ${version} as a typed Nix constructor for Nivis: its arguments and attributes, generated from the provider's schema.`,
+  modules: (count: number) =>
+    `${count} nivis modules: whole pieces of infrastructure as a single Nix import.`,
+  module: (address: string, description?: string) =>
+    description ? `${address}: ${description}` : `${address}, a nivis module.`,
 } as const;
 
 export const home = {

@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "packageManager": "pnpm@11.5.3",
-  "description": "Nivis registry SPA — a focused fork of opentofu/registry-ui (MPL-2.0) adapted to render Nix constructors.",
+  "description": "Nivis registry SPA \u2014 a focused fork of opentofu/registry-ui (MPL-2.0) adapted to render Nix constructors.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-server && NODE_ENV=production node scripts/prerender.mjs && node scripts/check-prerender.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b --noEmit"

@@ -11,9 +11,9 @@ import type {
   ProviderVersion,
 } from "./contract";
 
-// contractBase is where the contract tree is served from. Relative so the SPA
-// works under any mount point (CloudFront subpath, file://-ish previews, etc.).
-const contractBase = "registry/docs/providers";
+// contractBase is where the contract tree is served from. Absolute, because
+// routes are paths: a relative URL would resolve against the page's own depth.
+const contractBase = "/registry/docs/providers";
 
 function providerIndexURL(ref: ProviderRef): string {
   return `${contractBase}/${ref.namespace}/${ref.name}/${ref.version}/index.json`;
@@ -23,10 +23,18 @@ function itemDocURL(ref: ProviderRef, item: string): string {
   return `${contractBase}/${ref.namespace}/${ref.name}/${ref.version}/${item}.md`;
 }
 
-async function getText(url: string): Promise<string> {
+export type TextFetcher = (url: string) => Promise<string>;
+
+async function fetchOverHttp(url: string): Promise<string> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
   return res.text();
+}
+
+let getText: TextFetcher = fetchOverHttp;
+
+export function setTextFetcher(fetcher: TextFetcher) {
+  getText = fetcher;
 }
 
 // fetchProviderVersion loads a provider version's index.json (item lists + compat).
@@ -61,14 +69,12 @@ export interface CatalogEntry extends ProviderRef {
 }
 
 export async function fetchCatalog(): Promise<CatalogEntry[]> {
-  const res = await fetch("registry/catalog.json");
-  if (!res.ok) throw new Error(`GET catalog -> ${res.status}`);
-  return (await res.json()) as CatalogEntry[];
+  return JSON.parse(await getText("/registry/catalog.json")) as CatalogEntry[];
 }
 
 // --- modules ---------------------------------------------------------------
 
-const moduleBase = "registry/docs/modules";
+const moduleBase = "/registry/docs/modules";
 
 // avatarURL resolves a contract-relative avatar reference ("avatars/ovh.png")
 // against the contract root. The contract stores it relative to itself so it
@@ -76,7 +82,7 @@ const moduleBase = "registry/docs/modules";
 // this layer for the same reason, and an <img src> straight from the contract
 // would resolve against the DOCUMENT instead and 404.
 export function avatarURL(ref?: string): string | undefined {
-  return ref ? `registry/${ref}` : undefined;
+  return ref ? `/registry/${ref}` : undefined;
 }
 
 function moduleIndexURL(ref: ModuleRef): string {
@@ -85,9 +91,7 @@ function moduleIndexURL(ref: ModuleRef): string {
 
 // fetchModuleCatalog lists the modules present in the static contract.
 export async function fetchModuleCatalog(): Promise<ModuleCatalogEntry[]> {
-  const res = await fetch("registry/modules.json");
-  if (!res.ok) throw new Error(`GET modules catalog -> ${res.status}`);
-  return (await res.json()) as ModuleCatalogEntry[];
+  return JSON.parse(await getText("/registry/modules.json")) as ModuleCatalogEntry[];
 }
 
 // fetchModuleVersion loads one module version's derived structure.

@@ -11,6 +11,7 @@ result-*
 # Node / frontend
 node_modules/
 frontend/dist/
+frontend/dist-server/
 frontend/.vite/
 *.tsbuildinfo
 

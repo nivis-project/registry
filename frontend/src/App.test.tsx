@@ -112,9 +112,8 @@ describe("section routes", () => {
     await waitFor(() =>
       expect(screen.getByText("random_password")).toBeTruthy(),
     );
-    // The added route depth did not break the relative contract fetch path.
     expect(vi.mocked(fetch).mock.calls[0][0]).toBe(
-      "registry/docs/providers/hashicorp/random/3.9.0/index.json",
+      "/registry/docs/providers/hashicorp/random/3.9.0/index.json",
     );
   });
 });

@@ -19,13 +19,13 @@ describe("the owner avatar", () => {
   it("resolves the reference against the contract root, not the document", () => {
     render(<Avatar src="avatars/ovh.png" owner="ovh" />);
     const img = screen.getByRole("img", { name: /ovh/i });
-    expect(img.getAttribute("src")).toBe("registry/avatars/ovh.png");
+    expect(img.getAttribute("src")).toBe("/registry/avatars/ovh.png");
   });
 
-  it("keeps the src relative, so the site still works under a subpath", () => {
+  it("makes the src absolute, so it resolves at any route depth", () => {
     render(<Avatar src="avatars/ovh.png" owner="ovh" />);
     const src = screen.getByRole("img", { name: /ovh/i }).getAttribute("src")!;
-    expect(src.startsWith("/")).toBe(false);
+    expect(src.startsWith("/registry/")).toBe(true);
     expect(src.startsWith("http")).toBe(false);
   });
 
