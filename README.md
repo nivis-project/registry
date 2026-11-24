@@ -58,4 +58,4 @@ Project code: Apache-2.0 (matching nivis). The vendored `frontend/` retains its 
 
 ---
 
-<p align="center"><sub>Part of the <a href="https://nivis.tf">Nivis</a> project: Terraform providers as first-class Nix values. Main repository: <a href="https://github.com/nivis-project/nivis">nivis-project/nivis</a>.</sub></p>
+<p align="center"><sub>Part of the <a href="https://nivis.tf">Nivis</a> project: Terraform resources as Nix values. Main repository: <a href="https://github.com/nivis-project/nivis">nivis-project/nivis</a>.</sub></p>
