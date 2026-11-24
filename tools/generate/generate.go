@@ -97,7 +97,7 @@ func GenerateProviderEnriched(extractDir, contractRoot string, enr Enrichment) (
 		return "", err
 	}
 
-	var resources []DocItem
+	resources := []DocItem{}
 	for _, nf := range nixFiles {
 		body, rerr := os.ReadFile(nf)
 		if rerr != nil {

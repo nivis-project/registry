@@ -53,6 +53,8 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - A provider whose contract has no resources (`hashicorp/http`) no longer fails
   to render.
+- The generated contract writes an empty resource list as `[]` instead of
+  `null`, so a provider with only data sources has a valid index.
 - Owner logos now appear. They were published correctly but requested from the
   wrong path, so every one of them silently 404'd.
 - Continuous integration passes again. It had been failing on every run since

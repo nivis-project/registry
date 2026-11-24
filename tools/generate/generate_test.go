@@ -340,3 +340,28 @@ func readJSON(t *testing.T, path string, dst any) {
 		t.Fatalf("parse %s: %v", path, err)
 	}
 }
+
+func TestProviderWithoutResourcesWritesEmptyList(t *testing.T) {
+	vdir := writeFixtureProvider(t, t.TempDir(), "hashicorp", "http", "3.6.3",
+		[]string{"5.0"}, [][2]string{{"linux", "amd64"}}, map[string]string{})
+
+	idxPath, err := GenerateProvider(vdir, t.TempDir())
+	if err != nil {
+		t.Fatalf("GenerateProvider: %v", err)
+	}
+	raw, err := os.ReadFile(idxPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Docs map[string]json.RawMessage `json:"docs"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	for _, kind := range []string{"resources", "datasources", "functions", "guides"} {
+		if got := string(doc.Docs[kind]); got != "[]" {
+			t.Errorf("docs.%s = %s, want []", kind, got)
+		}
+	}
+}
