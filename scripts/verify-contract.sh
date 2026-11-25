@@ -43,6 +43,19 @@ if missing:
         f"e.g. {', '.join(missing[:5])}"
     )
 
+not_lists = []
+for p in catalog:
+    index = load(dest / "docs" / "providers" / p["namespace"] / p["name"] / p["version"] / "index.json")
+    docs = index.get("docs") or {}
+    for kind in ("resources", "datasources", "functions", "guides"):
+        if not isinstance(docs.get(kind), list):
+            not_lists.append(f"{p['namespace']}/{p['name']}@{p['version']} docs.{kind}")
+if not_lists:
+    sys.exit(
+        f"verify-contract: {len(not_lists)} document list(s) are not arrays (null or absent), "
+        f"e.g. {', '.join(not_lists[:5])}"
+    )
+
 # modules.json is optional: a contract generated before the module pipeline has
 # none. When present, every row must resolve on the same terms.
 mod_count = 0

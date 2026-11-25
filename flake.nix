@@ -114,6 +114,11 @@
             doCheck = true;
           };
 
+          verify-contract = pkgs.runCommand "verify-contract" { nativeBuildInputs = [ pkgs.python3 ]; } ''
+            bash ${./scripts}/test-verify-contract.sh
+            touch $out
+          '';
+
           readme-header = pkgs.runCommand "readme-header" { } ''
             bash ${./scripts/check-readme-header.sh} ${./README.md} registry "alpha"
             touch $out
