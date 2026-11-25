@@ -1,0 +1,10 @@
+[
+  {
+    "owner": "wearetechnative",
+    "name": "nivis-aws-amplify-site",
+    "version": "0.1.0",
+    "description": "nivis-aws-amplify-site \u2014 GitHub-connected AWS Amplify Hosting site (app + branch + domain + service role) as a nivis module",
+    "derived": true,
+    "avatar": "avatars/wearetechnative.png"
+  }
+]

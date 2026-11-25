@@ -1,0 +1,124 @@
+{
+  "id": "0.1.0",
+  "owner": "wearetechnative",
+  "name": "nivis-aws-amplify-site",
+  "tag": "v0.1.0",
+  "rev": "1b76f038d95b856acbf4ec7bea69e5d72c8ec043",
+  "description": "nivis-aws-amplify-site — GitHub-connected AWS Amplify Hosting site (app + branch + domain + service role) as a nivis module",
+  "resources": [
+    {
+      "provider": "aws",
+      "type": "aws_iam_role",
+      "name": "amplify_service",
+      "docs": "hashicorp/aws/6.74.0"
+    },
+    {
+      "provider": "aws",
+      "type": "aws_iam_role_policy_attachment",
+      "name": "amplify_service",
+      "docs": "hashicorp/aws/6.74.0"
+    },
+    {
+      "provider": "aws",
+      "type": "aws_amplify_app",
+      "name": "site",
+      "docs": "hashicorp/aws/6.74.0"
+    },
+    {
+      "provider": "aws",
+      "type": "aws_amplify_branch",
+      "name": "main",
+      "docs": "hashicorp/aws/6.74.0"
+    },
+    {
+      "provider": "aws",
+      "type": "aws_amplify_domain_association",
+      "name": "root",
+      "docs": "hashicorp/aws/6.74.0"
+    }
+  ],
+  "data_sources": [
+    {
+      "provider": "aws",
+      "type": "aws_ssm_parameter",
+      "name": "github_token",
+      "docs": "hashicorp/aws/6.74.0"
+    }
+  ],
+  "outputs": [
+    "amplify_app_id",
+    "amplify_default_domain",
+    "domain_association_arn",
+    "domain_cert_verification_dns_record"
+  ],
+  "cfg": [
+    {
+      "path": "appName",
+      "required": true
+    },
+    {
+      "path": "branch",
+      "required": true
+    },
+    {
+      "path": "buildSpec",
+      "required": false
+    },
+    {
+      "path": "domain",
+      "required": true
+    },
+    {
+      "path": "environmentVariables",
+      "required": false
+    },
+    {
+      "path": "formProxy",
+      "required": false
+    },
+    {
+      "path": "formProxy.apiEndpointRef",
+      "required": false
+    },
+    {
+      "path": "formProxy.pathPrefix",
+      "required": false
+    },
+    {
+      "path": "githubTokenParam",
+      "required": true
+    },
+    {
+      "path": "preRules",
+      "required": false
+    },
+    {
+      "path": "redirects",
+      "required": false
+    },
+    {
+      "path": "region",
+      "required": true
+    },
+    {
+      "path": "repository",
+      "required": true
+    },
+    {
+      "path": "subDomains",
+      "required": true
+    },
+    {
+      "path": "tags",
+      "required": true
+    }
+  ],
+  "record": {
+    "structure_extractable": true,
+    "cfg_source": "scanned",
+    "providers_resolved": 6,
+    "providers_total": 6
+  },
+  "avatar": "avatars/wearetechnative.png",
+  "readme": "# nivis-aws-amplify-site\n\nA GitHub-connected AWS Amplify Hosting site as a\n**[nivis](https://github.com/nivis-project/nivis) module**: Amplify app +\nproduction branch + custom-domain association + build service role, with\nredirect rules and an optional same-origin form proxy. Successor of the\nOpenTofu-era `brunordias/amplify-app` usage. First deployed for technative.eu\nv2026.\n\n## Usage\n\n```nix\n# flake input:\n#   amplifySite.url = \"git+ssh://git@github.com/wearetechnative/nivis-aws-amplify-site?ref=refs/tags/v0.1.0\";\n\nsite = amplifySite.nivisModules.default {\n  nivis = nivis.lib;\n  # namePrefix = \"\";        # set when instantiating twice in one domain\n  cfg = {\n    appName = \"myorg-prod-website\";\n    region = \"eu-central-1\";              # for the regional Amplify principal\n    repository = \"https://github.com/myorg/my-hugo-site\";\n    branch = \"main\";\n    domain = \"example.org\";\n    subDomains = [ { prefix = \"\"; } { prefix = \"www\"; } ];\n    githubTokenParam = \"/myorg/github_token\";   # SSM SecureString (see below)\n    preRules = [                          # evaluated first (host rules etc.)\n      { source = \"https://www.example.org\"; status = \"301\"; target = \"https://example.org\"; }\n    ];\n    redirects = import ./redirects.nix;   # bulk path redirects, evaluated last\n    # formProxy = {                       # optional same-origin form proxy\n    #   pathPrefix = \"/sendform\";         # -\u003e 200-rewrite /sendform/\u003c*\u003e to the API\n    #   apiEndpointRef = form.apiEndpointRef;   # from nivis-aws-form-action\n    # };\n    buildSpec = ''...'';                  # optional amplify.yml content\n    tags = { ManagedBy = \"nivis\"; };\n  };\n};\n\n# then in your domain's toIR:\n#   resources = site.resources ++ ...;\n#   dataSources = site.dataSources ++ ...;\n#   outputs = site.outputs // ...;\n```\n\n## Module conventions (nivis bean `nixform2-l2hx`)\n\n- **`namePrefix`** namespaces all resource names; default `\"\"` keeps canonical\n  names (`site`, `main`, `root`, `amplify_service`, `github_token`).\n- The module references provider id **`\"aws\"`** — the consumer supplies the\n  provider and the state backend.\n\n## Prerequisites \u0026 operational gotchas (learned in production)\n\n- **The AWS Amplify GitHub App** (e.g. `aws-amplify-eu-central-1`) MUST be\n  installed on the GitHub org and granted the site repo — builds fetch sources\n  through the App. Without it, builds fail right after \"Build environment\n  configured\" with the **misleading** error `Unable to assume specified IAM\n  Role` (aws-amplify/amplify-hosting#4035). Install via\n  `https://github.com/apps/aws-amplify-\u003cregion\u003e/installations/new`.\n- **GitHub token** at `cfg.githubTokenParam` (SSM SecureString): officially\n  Amplify supports classic PATs (`ghp_…`) only; a fine-grained PAT sufficed for\n  provisioning (webhook) in practice. The token value lands in nivis state —\n  keep the state bucket encrypted.\n- **`iam_service_role_arn` is a one-way door**: unsetting it forces a full app\n  replace, so the module always creates/attaches the service role\n  (`AdministratorAccess-Amplify`; scope down if desired).\n- **Domain mechanics**: Amplify auto-writes Route53 records + ACM validation\n  in-account (same-account hosted zone) — no manual DNS. A domain/subdomain can\n  be associated with only ONE Amplify app; moving a domain between apps means\n  deleting the old association first (~minutes of switchover).\n- **Redirect order**: `preRules` → `formProxy` rewrite → `redirects`, evaluated\n  top-down, first match wins. Amplify accepted 100+ rules in practice.\n"
+}

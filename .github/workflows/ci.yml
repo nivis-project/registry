@@ -92,4 +92,8 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+      - name: put the fixture contract in place
+        run: |
+          cp -r fixtures/contract public/registry
+          bash ../scripts/verify-contract.sh public/registry
       - run: pnpm build

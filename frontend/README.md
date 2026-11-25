@@ -14,6 +14,18 @@ contract types, and routing model follow registry-ui. The contract type definiti
 `src/lib/contract.ts` mirror upstream's `backend/internal/server/openapi.yml`
 (`ProviderVersion` / `ProviderDocs` / `ProviderDocItem`), extended with the Nivis `compat` record.
 
+## Building without the contract bucket
+
+`pnpm build` prerenders every route, so it needs a contract in
+`public/registry/`. The real one comes from a private S3 bucket
+(`scripts/fetch-contract.sh`). Without access to it, use the small fixture that
+CI uses:
+
+```sh
+cp -r fixtures/contract public/registry
+pnpm build
+```
+
 ## Stack
 
 React 19 + Vite + react-router (path routes, each prerendered to static HTML) + TanStack Query + Tailwind, built

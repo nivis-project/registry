@@ -1,0 +1,20 @@
+[
+  {
+    "namespace": "hashicorp",
+    "name": "http",
+    "version": "3.6.3",
+    "tier": "compatible by design",
+    "avatar": "avatars/hashicorp.png",
+    "reason": "utility",
+    "publisher": "official"
+  },
+  {
+    "namespace": "hashicorp",
+    "name": "random",
+    "version": "3.9.1",
+    "tier": "compatible by design",
+    "avatar": "avatars/hashicorp.png",
+    "reason": "utility",
+    "publisher": "official"
+  }
+]

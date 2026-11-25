@@ -1,0 +1,25 @@
+{
+  "id": "3.6.3",
+  "docs": {
+    "resources": [],
+    "datasources": [],
+    "functions": [],
+    "guides": []
+  },
+  "compat": {
+    "address": "hashicorp/http",
+    "tier": "compatible by design",
+    "schema_extractable": true,
+    "protocols": [
+      "5.0"
+    ],
+    "architectures": [
+      "linux/amd64",
+      "linux/arm64",
+      "darwin/amd64",
+      "darwin/arm64"
+    ],
+    "e2e": "none"
+  },
+  "avatar": "avatars/hashicorp.png"
+}

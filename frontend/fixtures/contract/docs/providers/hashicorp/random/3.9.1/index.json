@@ -1,0 +1,86 @@
+{
+  "id": "3.9.1",
+  "docs": {
+    "resources": [
+      {
+        "name": "random_bytes",
+        "title": "random_bytes",
+        "description": "Nivis Nix constructor for random_bytes (1 required, 1 optional, 2 computed)",
+        "subcategory": "random"
+      },
+      {
+        "name": "random_id",
+        "title": "random_id",
+        "description": "Nivis Nix constructor for random_id (1 required, 2 optional, 5 computed)",
+        "subcategory": "random"
+      },
+      {
+        "name": "random_integer",
+        "title": "random_integer",
+        "description": "Nivis Nix constructor for random_integer (2 required, 2 optional, 2 computed)",
+        "subcategory": "random"
+      },
+      {
+        "name": "random_password",
+        "title": "random_password",
+        "description": "Nivis Nix constructor for random_password (1 required, 11 optional, 3 computed)",
+        "subcategory": "random"
+      },
+      {
+        "name": "random_pet",
+        "title": "random_pet",
+        "description": "Nivis Nix constructor for random_pet (0 required, 4 optional, 1 computed)",
+        "subcategory": "random"
+      },
+      {
+        "name": "random_shuffle",
+        "title": "random_shuffle",
+        "description": "Nivis Nix constructor for random_shuffle (1 required, 3 optional, 2 computed)",
+        "subcategory": "random"
+      },
+      {
+        "name": "random_string",
+        "title": "random_string",
+        "description": "Nivis Nix constructor for random_string (1 required, 11 optional, 2 computed)",
+        "subcategory": "random"
+      },
+      {
+        "name": "random_uuid",
+        "title": "random_uuid",
+        "description": "Nivis Nix constructor for random_uuid (0 required, 1 optional, 2 computed)",
+        "subcategory": "random"
+      },
+      {
+        "name": "random_uuid4",
+        "title": "random_uuid4",
+        "description": "Nivis Nix constructor for random_uuid4 (0 required, 1 optional, 2 computed)",
+        "subcategory": "random"
+      },
+      {
+        "name": "random_uuid7",
+        "title": "random_uuid7",
+        "description": "Nivis Nix constructor for random_uuid7 (0 required, 1 optional, 2 computed)",
+        "subcategory": "random"
+      }
+    ],
+    "datasources": [],
+    "functions": [],
+    "guides": []
+  },
+  "compat": {
+    "address": "hashicorp/random",
+    "tier": "compatible by design",
+    "schema_extractable": true,
+    "protocols": [
+      "5.0"
+    ],
+    "architectures": [
+      "linux/amd64",
+      "linux/arm64",
+      "darwin/amd64",
+      "darwin/arm64"
+    ],
+    "e2e": "none"
+  },
+  "avatar": "avatars/hashicorp.png"
+}
