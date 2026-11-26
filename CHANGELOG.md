@@ -22,6 +22,8 @@ the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The ZITADEL provider (`zitadel/zitadel`) is in the catalogue, pinned in
+  `seed-pins.json` as a European service (CH).
 - Provider and module listings show the publisher's logo, so a catalogue of 59
   entries is scannable instead of a wall of addresses. Logos are fetched when
   the contract is built and served from this site, never from a third party.
